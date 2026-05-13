@@ -232,7 +232,6 @@ function ReportView({ data, onBack }) {
   const infoFields = [
     ["Fecha de auditoría", form.fecha || "—"],
     ["Planta", form.planta || "—"],
-    ["Especie", "Porcina"],
     ["Metodología", form.equipo || "—"],
     ["Canales evaluadas", form.canalesTotal || (totalCanales > 0 ? String(totalCanales) : "—")],
     ["Auditor", form.responsable || "—"],
