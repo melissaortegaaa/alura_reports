@@ -128,7 +128,7 @@ function scoreColor(score, max) {
 // ── REPORT VIEW ────────────────────────────────────────────────────────────
 // ── DEMO DATA ─────────────────────────────────────────────────────────────
 const DEMO = {
-  form: { planta: "", fecha: new Date().toISOString().split("T")[0], responsable: "", responsablePlanta: "", operario: "", equipo: "GP4", canalesTotal: "", canalesInclinadas: "", observaciones: "" },
+  form: { planta: "", fecha: new Date().toISOString().split("T")[0], responsable: "", responsablePlanta: "", operario: "", equipo: "GP4", canalesTotal: "", canalesInclinadas: "", canalObs: "", observaciones: "" },
   canalCounts: { B: 0, R: 0, M: 0, I: 0 },
   equipScores: {},
   equipObs: "",
@@ -398,11 +398,7 @@ function ReportView({ data, onBack }) {
               <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 22, fontWeight: 700, color: scoreSt(canalScore,60).color, lineHeight: 1 }}>{canalScore}</div>
               <div style={{ fontSize: 10, color: scoreSt(canalScore,60).color, lineHeight: 1.4 }}>de 60 pts<br/><strong>{Math.round((canalScore/60)*100)}%</strong></div>
             </div>
-            <p style={{ fontSize: 12, color: Ink, lineHeight: 1.7, marginBottom: 8 }}>
-              {desvPct > 0
-                ? `Las categorías "Malo" e "Insuficiente" (${desvPct}%) se asociaron principalmente con errores en la identificación del espacio intercostal, evidenciándose mediciones en ubicaciones incorrectas y dificultades para diferenciar entre costillas verdaderas y falsas.`
-                : `La inspección de canales muestra resultados dentro del rango esperado. El ${bPct}% de las canales fue clasificado como Bueno (B), reflejando una técnica de punción consistente.`}
-            </p>
+            {form.canalObs && <p style={{ fontSize: 12, color: Ink, lineHeight: 1.7, marginBottom: 8 }}>{form.canalObs}</p>}
             {totalCanales > 0 && form.canalesInclinadas && <p style={{ fontSize: 12, color: Ink, lineHeight: 1.7 }}>
               {`Durante la inserción del equipo ${form.equipo}, se presentaron inclinaciones en ${form.canalesInclinadas} canales (${Math.round((Number(form.canalesInclinadas)/totalCanales)*100)}%), afectando la perpendicularidad y la precisión del procedimiento.`}
             </p>}
@@ -550,7 +546,7 @@ export default function AccuremaxApp() {
   const [form, setForm] = useState({
     planta: "", fecha: new Date().toISOString().split("T")[0],
     responsable: "", responsablePlanta: "", operario: "",
-    equipo: "GP4", canalesTotal: "", canalesInclinadas: "", observaciones: "",
+    equipo: "GP4", canalesTotal: "", canalesInclinadas: "", canalObs: "", observaciones: "",
   });
   const [canalCounts, setCanalCounts] = useState({ B: 0, R: 0, M: 0, I: 0 });
   const [equipScores, setEquipScores] = useState({});
@@ -707,7 +703,11 @@ export default function AccuremaxApp() {
               )}
             </SectionCard>
 
-            <SectionCard number="02b" title="Canales con inclinación" subtitle="Número de canales donde se presentó inclinación del equipo">
+            <SectionCard number="02b" title="Observaciones de inspección de canales" subtitle="Descripción narrativa que aparecerá en la tarjeta A del informe">
+              <Textarea placeholder="Ej. Las categorías Malo e Insuficiente se asociaron con errores en la identificación del espacio intercostal…" value={form.canalObs} onChange={e => set("canalObs", e.target.value)} />
+            </SectionCard>
+
+            <SectionCard number="02c" title="Canales con inclinación" subtitle="Número de canales donde se presentó inclinación del equipo (aparece en tarjeta A)">
               <div style={{ maxWidth: 260 }}>
                 <Label>Canales inclinadas (cantidad)</Label>
                 <Input type="number" min="0" placeholder="Ej. 51" value={form.canalesInclinadas} onChange={e => set("canalesInclinadas", e.target.value)} />
