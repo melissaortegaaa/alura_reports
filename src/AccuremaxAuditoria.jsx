@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, useReducer } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from "recharts";
 import * as XLSX from "xlsx";
 
@@ -180,22 +180,22 @@ function ReportView({ data, onBack }) {
   const merged = data;
   const { form, equipScores, equipObs, eqScore, eqObs, photos, selectedRecs, customRec, canalCounts, equipRows, selectedConcls = [], photoLabels = ["", ""] } = merged;
 
-  const equipTotal = equipRows.reduce((acc, row, i) => {
+  const equipTotal = useMemo(() => equipRows.reduce((acc, row, i) => {
     const ans = equipScores[i];
     if (ans === undefined) return acc;
     const isNeg = row.item.includes("exceso de humedad") || row.item.includes("humedad o agua");
     return acc + ((isNeg ? ans === "NO" : ans === "SI") ? row.pond : 0);
-  }, 0);
+  }, 0), [equipRows, equipScores]);
 
-  const allRecs = [...selectedRecs, ...(customRec ? [{ id: "custom", text: customRec }] : [])];
-  const totalCanales = Object.values(canalCounts).reduce((a, b) => a + b, 0);
-  const canalData = totalCanales > 0
+  const allRecs = useMemo(() => [...selectedRecs, ...(customRec ? [{ id: "custom", text: customRec }] : [])], [selectedRecs, customRec]);
+  const totalCanales = useMemo(() => Object.values(canalCounts).reduce((a, b) => a + b, 0), [canalCounts]);
+  const canalData = useMemo(() => totalCanales > 0
     ? ["B","R","M","I"].filter(c => canalCounts[c] > 0).map(cat => ({
         cat, count: canalCounts[cat],
         pct: Math.round((canalCounts[cat] / totalCanales) * 100),
         color: CANAL_COLORS[cat], label: CANAL_LABELS[cat],
       }))
-    : null;
+    : null, [canalCounts, totalCanales]);
   const eqNum = Number(eqScore);
   const bPct = canalData ? (canalData.find(d => d.cat === "B")?.pct || 0) : 0;
   const canalScore = bPct > 81 ? 60 : bPct >= 51 ? 45 : bPct >= 31 ? 30 : bPct > 0 ? 15 : 0;
@@ -561,11 +561,19 @@ function ReportView({ data, onBack }) {
     </div>
   );
 }
+const FORM_DEFAULTS = { planta: "", fecha: new Date().toISOString().split("T")[0], responsable: "", responsablePlanta: "", operario: "", equipo: "GP4", canalesTotal: "", canalesInclinadas: "", canalObs: "", observaciones: "", conclusiones: "" };
+
+function formReducer(state, action) {
+  if (action.type === "SET") return { ...state, [action.key]: action.value };
+  if (action.type === "RESET") return { ...FORM_DEFAULTS, fecha: new Date().toISOString().split("T")[0] };
+  return state;
+}
+
 export default function AccuremaxApp() {
   const [view, setView] = useState("form");
-  const [form, setForm] = useState(() => {
+  const [form, dispatchForm] = useReducer(formReducer, null, () => {
     try { const d = JSON.parse(localStorage.getItem("alura_audit_draft") || "{}"); if (d.form) return d.form; } catch {}
-    return { planta: "", fecha: new Date().toISOString().split("T")[0], responsable: "", responsablePlanta: "", operario: "", equipo: "GP4", canalesTotal: "", canalesInclinadas: "", canalObs: "", observaciones: "", conclusiones: "" };
+    return { ...FORM_DEFAULTS };
   });
   const [canalCounts, setCanalCounts] = useState(() => { try { const d = JSON.parse(localStorage.getItem("alura_audit_draft")||"{}"); return d.canalCounts||{ B:0,R:0,M:0,I:0 }; } catch { return { B:0,R:0,M:0,I:0 }; } });
   const [equipScores, setEquipScores] = useState(() => { try { const d = JSON.parse(localStorage.getItem("alura_audit_draft")||"{}"); return d.equipScores||{}; } catch { return {}; } });
@@ -605,7 +613,7 @@ export default function AccuremaxApp() {
   const photoRef1 = useRef();
   const photoRefs = [photoRef0, photoRef1];
 
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k, v) => dispatchForm({ type: "SET", key: k, value: v });
   const toggleRec = id => setRecs(r => ({ ...r, [id]: !r[id] }));
   const toggleConcl = id => setConcls(c => ({ ...c, [id]: !c[id] }));
   const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
@@ -613,20 +621,20 @@ export default function AccuremaxApp() {
   const handlePhoto = (idx, e) => { const f = e.target.files[0]; if (!f) return; setPhotos(p => { const n = [...p]; if (n[idx]) URL.revokeObjectURL(n[idx].url); n[idx] = { name: f.name, url: URL.createObjectURL(f) }; return n; }); };
   const removePhoto = idx => setPhotos(p => { const n = [...p]; if (n[idx]) URL.revokeObjectURL(n[idx].url); n[idx] = null; return n; });
 
-  const equipRows = EQUIP_TABLES[form.equipo] || EQUIP_GP;
-  const equipTotal = equipRows.reduce((acc, row, i) => {
+  const equipRows = useMemo(() => EQUIP_TABLES[form.equipo] || EQUIP_GP, [form.equipo]);
+  const equipTotal = useMemo(() => equipRows.reduce((acc, row, i) => {
     const ans = equipScores[i];
     if (ans === undefined) return acc;
     const isNeg = row.item.includes("exceso de humedad") || row.item.includes("humedad o agua");
     return acc + ((isNeg ? ans === "NO" : ans === "SI") ? row.pond : 0);
-  }, 0);
+  }, 0), [equipRows, equipScores]);
   const equipAnswered = Object.keys(equipScores).length;
   const eqNum = Number(eqScore);
   const eqColor = eqNum === 20 ? Green : eqNum === 10 ? Amber : eqScore !== "" ? B : Muted;
-  const selectedRecs = recsLibrary.filter(r => recs[r.id]);
-  const recCats = [...new Set(recsLibrary.map(r => r.cat))];
-  const selectedConcls = conclLibrary.filter(c => concls[c.id]);
-  const conclCats = [...new Set(conclLibrary.map(c => c.cat))];
+  const selectedRecs = useMemo(() => recsLibrary.filter(r => recs[r.id]), [recsLibrary, recs]);
+  const recCats = useMemo(() => [...new Set(recsLibrary.map(r => r.cat))], [recsLibrary]);
+  const selectedConcls = useMemo(() => conclLibrary.filter(c => concls[c.id]), [conclLibrary, concls]);
+  const conclCats = useMemo(() => [...new Set(conclLibrary.map(c => c.cat))], [conclLibrary]);
 
   const handleExport = () => {
     const wb = XLSX.utils.book_new();
