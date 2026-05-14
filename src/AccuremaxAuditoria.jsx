@@ -49,6 +49,22 @@ input,select,textarea,button{font-family:'Plus Jakarta Sans',sans-serif}
   #report-body{max-width:100%!important;padding:16px!important;margin:0 auto!important}
   #report-body *{page-break-inside:avoid}
 }
+/* Report responsive grids */
+.rpt-hero{display:grid;grid-template-columns:1fr 200px}
+.rpt-info{display:grid;grid-template-columns:repeat(3,1fr)}
+.rpt-2col{display:grid;grid-template-columns:1fr 1fr}
+.rpt-2col-sm{display:grid;grid-template-columns:1fr 1fr}
+.rpt-3col{display:grid;grid-template-columns:1fr 1fr 1fr}
+.rpt-photos{display:grid;grid-template-columns:1fr 1fr}
+.rpt-concl{display:grid;grid-template-columns:1fr auto}
+.rpt-topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 16px}
+@media(max-width:700px){
+  .rpt-hero,.rpt-2col,.rpt-3col,.rpt-photos,.rpt-concl{grid-template-columns:1fr!important}
+  .rpt-2col-sm{grid-template-columns:1fr!important}
+  .rpt-info{grid-template-columns:1fr 1fr!important}
+  .rpt-topbar{padding:8px 12px}
+  .rpt-topbar .rpt-title{font-size:13px!important}
+}
 `;
 
 const Label = ({ children }) => (
@@ -282,11 +298,11 @@ function ReportView({ data, onBack }) {
   return (
     <div style={{ background: Sand, minHeight: "100vh" }}>
       {/* TOP BAR */}
-      <div className="no-print" style={{ background: White, borderBottom: `1px solid ${SandBorder}`, padding: "11px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div>
-            <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 15, fontWeight: 700, color: Ink }}>Informe de auditoría — Magro en canales porcinas</div>
-            <div style={{ fontSize: 11, color: Muted }}>Generado: {new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" })}</div>
+      <div className="no-print rpt-topbar" style={{ background: White, borderBottom: `1px solid ${SandBorder}`, position: "sticky", top: 0, zIndex: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+          <div style={{ minWidth: 0 }}>
+            <div className="rpt-title" style={{ fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 700, color: Ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Informe — Magro en canales porcinas</div>
+            <div style={{ fontSize: 10, color: Muted }}>Generado: {new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" })}</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -312,13 +328,13 @@ function ReportView({ data, onBack }) {
       <div id="report-body" style={{ maxWidth: 960, margin: "0 auto", padding: "24px 24px 48px" }}>
 
         {/* HERO */}
-        <div style={{ background: B, borderRadius: 14, overflow: "hidden", marginBottom: 20, display: "grid", gridTemplateColumns: "1fr 200px" }}>
+        <div className="rpt-hero" style={{ background: B, borderRadius: 14, overflow: "hidden", marginBottom: 20 }}>
           <div style={{ padding: "28px 32px" }}>
             <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>ALURA · Science for Life · Informe de auditoría</div>
             <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 28, fontWeight: 700, color: White, lineHeight: 1.1, marginBottom: 20 }}>
               Informe de auditoría<br />magro en canales porcinas
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px 24px" }}>
+            <div className="rpt-info" style={{ gap: "8px 24px" }}>
               {infoFields.map(([l, v]) => (
                 <div key={l}>
                   <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", marginBottom: 2 }}>{l}</div>
@@ -337,7 +353,7 @@ function ReportView({ data, onBack }) {
         {/* SECCIÓN: RESULTADOS */}
         <div style={{ background: White, border: `1px solid ${SandBorder}`, borderRadius: 12, padding: 20, marginBottom: 16 }}>
           <DashSec title="Resultados" />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+          <div className="rpt-2col" style={{ gap: 24 }}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: Muted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>Gráfica 1. Resultado general de la auditoría</div>
               <div style={{ height: 200 }}>
@@ -412,7 +428,7 @@ function ReportView({ data, onBack }) {
         </div>
 
         {/* A B C — 3 COLUMNAS */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 16 }}>
+        <div className="rpt-3col" style={{ gap: 14, marginBottom: 16 }}>
           {/* A */}
           <div style={{ background: White, border: `1px solid ${SandBorder}`, borderRadius: 12, padding: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
@@ -480,12 +496,12 @@ function ReportView({ data, onBack }) {
             <div style={{ width: 4, height: 18, background: B, borderRadius: 2 }} />
             <span style={{ fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 700, color: Ink }}>Evidencia fotográfica</span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div className="rpt-photos" style={{ gap: 20 }}>
             {[0,1].map(i => {
               const p = photos[i];
               return (
-                <div key={i}>
-                  <div style={{ position: "relative", borderRadius: 8, overflow: "hidden", border: `1px solid ${SandBorder}`, marginBottom: 8, aspectRatio: "3/4", background: Sand, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <div style={{ position: "relative", borderRadius: 8, overflow: "hidden", border: `1px solid ${SandBorder}`, marginBottom: 8, width: "100%", maxWidth: 200, aspectRatio: "3/4", background: Sand, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     {p ? (
                       <>
                         <img src={p.url} alt={photoLabels[i]} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
@@ -513,7 +529,7 @@ function ReportView({ data, onBack }) {
             {allRecs.length > 0 && <span style={{ background: BLight, color: B, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>{allRecs.length}</span>}
           </div>
           {allRecs.length > 0 ? (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 24px" }}>
+            <div className="rpt-2col-sm" style={{ gap: "10px 24px" }}>
               {allRecs.map((r, i) => {
                 const recTitle = r.text.split(":")[0];
                 const recBody = r.text.includes(":") ? r.text.split(":").slice(1).join(":").trim() : "";
@@ -535,7 +551,7 @@ function ReportView({ data, onBack }) {
 
         {/* CONCLUSIONES — bloque independiente con peso visual */}
         <div style={{ background: Ink, borderRadius: 14, overflow: "hidden", marginBottom: 20 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr auto" }}>
+          <div className="rpt-concl">
             <div style={{ padding: "28px 32px" }}>
               <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Auditoría de medición de magro · Conclusiones</div>
               <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 18, fontWeight: 700, color: White, marginBottom: 14, lineHeight: 1.2 }}>Conclusión general</div>
@@ -648,6 +664,24 @@ export default function AccuremaxApp() {
   const toggleRec = id => setRecs(r => ({ ...r, [id]: !r[id] }));
   const toggleConcl = id => setConcls(c => ({ ...c, [id]: !c[id] }));
   const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+
+  const handleReset = () => {
+    if (!window.confirm("¿Borrar todo el formulario? Esta acción no se puede deshacer.")) return;
+    photos.forEach(p => { if (p) URL.revokeObjectURL(p.url); });
+    dispatchForm({ type: "RESET" });
+    setCanalCounts({ B: 0, R: 0, M: 0, I: 0 });
+    setEquipScores({});
+    setEquipObs("");
+    setEqScore("");
+    setEqObs("");
+    setPhotoLabels(["", ""]);
+    setRecs({});
+    setCustomRec("");
+    setConcls({});
+    setPhotos([null, null]);
+    try { localStorage.removeItem("alura_audit_draft"); } catch {}
+    showToast("Formulario borrado", "info");
+  };
 
   const handlePhoto = (idx, e) => { const f = e.target.files[0]; if (!f) return; setPhotos(p => { const n = [...p]; if (n[idx]) URL.revokeObjectURL(n[idx].url); n[idx] = { name: f.name, url: URL.createObjectURL(f) }; return n; }); };
   const removePhoto = idx => setPhotos(p => { const n = [...p]; if (n[idx]) URL.revokeObjectURL(n[idx].url); n[idx] = null; return n; });
@@ -1107,6 +1141,16 @@ export default function AccuremaxApp() {
                     onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.2)")} onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="15" x2="12" y2="3"/><polyline points="7 15 12 20 17 15"/></svg>
                     <div style={{ textAlign: "center" }}><div style={{ fontSize: 12, fontWeight: 700 }}>Plantilla Excel</div><div style={{ fontSize: 10, opacity: 0.6, marginTop: 1 }}>Descargar</div></div>
+                  </button>
+                </div>
+                {/* Borrar formulario */}
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
+                  <button onClick={handleReset}
+                    style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "6px 14px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.45)", cursor: "pointer", transition: "all .15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,100,100,0.6)"; e.currentTarget.style.color = "#ff9999"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                    Borrar formulario
                   </button>
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
