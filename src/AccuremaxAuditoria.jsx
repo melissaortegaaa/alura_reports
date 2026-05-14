@@ -240,6 +240,169 @@ function ReportView({ data, onBack }) {
     ["Operario", form.operario || "—"],
   ].filter(([, v]) => v && v !== "—");
 
+  const handlePDF = async () => {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const W = 210, H = 297, mg = 16, cW = W - mg * 2;
+    const BR = [153,57,53], BRD = [122,44,42], INK = [44,42,40], MUT = [139,139,141];
+    const GRN = [46,125,82], AMB = [133,79,11], SND = [245,242,238], WHT = [255,255,255];
+    const scoreColor = (s, m) => { const p = m>0?(s/m)*100:0; return p>=80?GRN:p>=50?AMB:BR; };
+    const scoreLabel = (s, m) => { const p = m>0?(s/m)*100:0; return p>=80?"Adecuado":p>=50?"Regular":"Deficiente"; };
+    const addPageHeader = (title) => {
+      doc.setFillColor(...BR); doc.rect(0,0,W,14,"F");
+      doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...WHT);
+      doc.text("ALURA · Science for Life · Informe de auditoría", mg, 9);
+      doc.text(form.planta||"", W-mg, 9, { align:"right" });
+      doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.setTextColor(...INK);
+      doc.text(title, mg, 26);
+      doc.setFillColor(...BR); doc.rect(mg, 29, 28, 0.8, "F");
+    };
+    doc.setFillColor(...BR); doc.rect(0,0,W,H,"F");
+    doc.setFillColor(...BRD); doc.triangle(W,H*0.55,W,H,W*0.35,H,"F");
+    try {
+      const logoB64 = await loadImgBase64("/Asset 63@3x.png");
+      doc.addImage(logoB64,"PNG",mg,mg,44,18,"","FAST");
+    } catch {
+      doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setTextColor(...WHT);
+      doc.text("ALURA",mg,mg+12);
+    }
+    doc.setDrawColor(...WHT,0.4); doc.setLineWidth(0.3);
+    doc.roundedRect(W-mg-58,mg,58,8,2,2,"D");
+    doc.setFont("helvetica","normal"); doc.setFontSize(6.5); doc.setTextColor(...WHT);
+    doc.text("USO CONFIDENCIAL · INTERNO ALURA",W-mg-29,mg+5,{align:"center"});
+    doc.setDrawColor(255,255,255,0.2); doc.setLineWidth(0.4);
+    doc.line(mg,70,W-mg,70);
+    doc.setFont("helvetica","bold"); doc.setFontSize(30); doc.setTextColor(...WHT);
+    doc.text("Informe de",mg,84); doc.text("auditoría",mg,96);
+    doc.setFont("helvetica","normal"); doc.setFontSize(13); doc.setTextColor(255,255,255,0.65);
+    doc.text("Medición de magro en canales porcinas",mg,107);
+    const infoGrid = [
+      ["Planta",form.planta||"—"],["Fecha",form.fecha||"—"],
+      ["Auditor",form.responsable||"—"],["Responsable planta",form.responsablePlanta||"—"],
+      ["Operario",form.operario||"—"],["Equipo",form.equipo||"—"],
+    ];
+    let gy=122;
+    infoGrid.forEach(([lbl,val],i)=>{
+      const col=i%2, row=Math.floor(i/2);
+      const gx=mg+col*(cW/2+4), gyy=gy+row*18;
+      doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(255,255,255,0.45);
+      doc.text(lbl.toUpperCase(),gx,gyy);
+      doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...WHT);
+      doc.text(String(val),gx,gyy+6);
+    });
+    const sy=H-62;
+    doc.setFillColor(255,255,255,0.1); doc.roundedRect(mg,sy,cW,44,5,5,"F");
+    doc.setDrawColor(255,255,255,0.2); doc.setLineWidth(0.4); doc.roundedRect(mg,sy,cW,44,5,5,"D");
+    doc.setFont("helvetica","bold"); doc.setFontSize(46); doc.setTextColor(...WHT);
+    doc.text(`${totalScore}`,mg+28,sy+28,{align:"center"});
+    doc.setFontSize(13); doc.setTextColor(255,255,255,0.6); doc.text("/ 100 pts",mg+44,sy+28);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(255,255,255,0.55);
+    doc.text(`Cumplimiento general: ${totalPct}% · ${scoreLabel(totalScore,100)}`,mg+28,sy+37,{align:"center"});
+    doc.text(new Date().toLocaleDateString("es-CO",{year:"numeric",month:"long",day:"numeric"}),W-mg,sy+37,{align:"right"});
+    doc.addPage(); addPageHeader("Resumen de resultados");
+    let y=36;
+    const cards=[
+      {label:"A. Inspección de canales",score:canalScore,max:60},
+      {label:"B. Verificación de la ecuación",score:eqScore!==""?Number(eqScore):0,max:20},
+      {label:"C. Estado físico del equipo",score:equipTotal,max:20},
+    ];
+    const cw3=(cW-8)/3;
+    cards.forEach((c,i)=>{
+      const cx=mg+i*(cw3+4);
+      const pct=c.max>0?Math.round((c.score/c.max)*100):0;
+      const col=scoreColor(c.score,c.max);
+      doc.setFillColor(...SND); doc.roundedRect(cx,y,cw3,36,3,3,"F");
+      doc.setDrawColor(...col,0.4); doc.setLineWidth(0.5); doc.roundedRect(cx,y,cw3,36,3,3,"D");
+      const lblLines=doc.splitTextToSize(c.label,cw3-6);
+      doc.setFont("helvetica","bold"); doc.setFontSize(6.5); doc.setTextColor(...MUT); doc.text(lblLines,cx+4,y+7);
+      doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.setTextColor(...col); doc.text(String(c.score),cx+4,y+23);
+      doc.setFontSize(8); doc.setTextColor(...MUT); doc.text(`/ ${c.max} pts`,cx+4+doc.getTextWidth(String(c.score))+1,y+23);
+      doc.setFillColor(226,217,208); doc.roundedRect(cx+4,y+27,cw3-8,3,1,1,"F");
+      if(pct>0){doc.setFillColor(...col); doc.roundedRect(cx+4,y+27,(cw3-8)*pct/100,3,1,1,"F");}
+      doc.setFont("helvetica","bold"); doc.setFontSize(7); doc.setTextColor(...col); doc.text(`${pct}%`,cx+cw3-4,y+30,{align:"right"});
+    });
+    y+=46;
+    doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...INK); doc.text("Distribución de canales",mg,y); y+=7;
+    const canalItems=[{lbl:"Buena (B)",cnt:canalCounts.B,col:GRN},{lbl:"Regular (R)",cnt:canalCounts.R,col:AMB},{lbl:"Mala (M)",cnt:canalCounts.M,col:BR},{lbl:"Insuficiente (I)",cnt:canalCounts.I,col:[136,135,128]}];
+    const bMaxW=cW-52, maxCnt=Math.max(...canalItems.map(d=>d.cnt),1);
+    canalItems.forEach(d=>{
+      const pct2=totalCanales>0?Math.round((d.cnt/totalCanales)*100):0;
+      const bW=(d.cnt/maxCnt)*bMaxW;
+      doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(...INK); doc.text(d.lbl,mg,y+5);
+      doc.setFillColor(226,217,208); doc.roundedRect(mg+38,y,bMaxW,6,1,1,"F");
+      if(d.cnt>0){doc.setFillColor(...d.col); doc.roundedRect(mg+38,y,bW,6,1,1,"F");}
+      doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...d.col); doc.text(`${d.cnt}  (${pct2}%)`,mg+38+bMaxW+3,y+5);
+      y+=12;
+    });
+    if(form.canalObs){y+=3;doc.setFillColor(245,234,234);doc.roundedRect(mg,y,cW,18,3,3,"F");doc.setFont("helvetica","bold");doc.setFontSize(7.5);doc.setTextColor(...BR);doc.text("Observaciones inspección de canales",mg+4,y+7);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(...INK);doc.text(doc.splitTextToSize(form.canalObs,cW-8).slice(0,2),mg+4,y+13);y+=22;}
+    if(eqObs){y+=3;doc.setFillColor(...SND);doc.roundedRect(mg,y,cW,18,3,3,"F");doc.setFont("helvetica","bold");doc.setFontSize(7.5);doc.setTextColor(...INK);doc.text("Observaciones verificación de la ecuación",mg+4,y+7);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(...INK);doc.text(doc.splitTextToSize(eqObs,cW-8).slice(0,2),mg+4,y+13);y+=22;}
+    doc.addPage(); addPageHeader(`Verificación del equipo — ${form.equipo}`);
+    let y3=36;
+    const eqR=EQUIP_TABLES[form.equipo]||EQUIP_GP;
+    const cw=[cW*0.68,cW*0.11,cW*0.21];
+    doc.setFillColor(...BR); doc.rect(mg,y3,cW,8,"F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(7); doc.setTextColor(...WHT);
+    doc.text("ÍTEM DE VERIFICACIÓN",mg+3,y3+5.5); doc.text("POND.",mg+cw[0]+3,y3+5.5); doc.text("CALIFICACIÓN",mg+cw[0]+cw[1]+cw[2]/2,y3+5.5,{align:"center"});
+    y3+=8;
+    eqR.forEach((row,i)=>{
+      const ans=equipScores[i];
+      const isNeg=row.item.includes("exceso de humedad")||row.item.includes("humedad o agua");
+      const isOk=ans!==undefined&&(isNeg?ans==="NO":ans==="SI");
+      if(i%2===0){doc.setFillColor(...SND); doc.rect(mg,y3,cW,8,"F");}
+      if(ans!==undefined){doc.setFillColor(...(isOk?[212,237,223]:[245,234,234]));doc.rect(mg+cw[0]+cw[1],y3,cw[2],8,"F");}
+      doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(...INK);
+      doc.text(doc.splitTextToSize(row.item,cw[0]-6)[0],mg+3,y3+5.5); doc.text(String(row.pond),mg+cw[0]+3,y3+5.5);
+      if(ans!==undefined){doc.setFont("helvetica","bold");doc.setTextColor(...(isOk?GRN:BR));doc.text(ans,mg+cw[0]+cw[1]+cw[2]/2,y3+5.5,{align:"center"});}
+      doc.setDrawColor(226,217,208); doc.setLineWidth(0.2); doc.line(mg,y3+8,mg+cW,y3+8);
+      y3+=8;
+    });
+    doc.setFillColor(...INK); doc.rect(mg,y3,cW,9,"F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...WHT);
+    doc.text("PUNTUACIÓN TOTAL",mg+3,y3+6); doc.text(`${equipTotal} / 20 pts — ${scoreLabel(equipTotal,20)}`,mg+cW-3,y3+6,{align:"right"});
+    y3+=14;
+    if(equipObs){const oLe=doc.splitTextToSize(equipObs,cW-8);const bh=oLe.length*5+12;doc.setFillColor(...SND);doc.roundedRect(mg,y3,cW,bh,3,3,"F");doc.setFont("helvetica","bold");doc.setFontSize(7.5);doc.setTextColor(...BR);doc.text("Observaciones del equipo",mg+4,y3+8);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(...INK);doc.text(oLe,mg+4,y3+14);}
+    doc.addPage(); addPageHeader("Recomendaciones y conclusiones");
+    let y4=36;
+    if(allRecs.length>0){
+      doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...INK); doc.text("Recomendaciones",mg,y4); y4+=8;
+      allRecs.forEach((r,i)=>{
+        const parts=r.text.split(":");const title=parts[0];const body=parts.slice(1).join(":").trim();
+        doc.setFillColor(...BR); doc.circle(mg+5,y4+5,4,"F");
+        doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...WHT); doc.text(String(i+1),mg+5,y4+7,{align:"center"});
+        doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...INK); doc.text(title,mg+13,y4+5);
+        if(body){doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(...MUT);doc.text(doc.splitTextToSize(body,cW-13).slice(0,2),mg+13,y4+11);y4+=7;}
+        y4+=16;
+        if(y4>H-50){doc.addPage();doc.setFillColor(...BR);doc.rect(0,0,W,14,"F");doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(...WHT);doc.text("ALURA · Informe de auditoría",mg,9);y4=24;}
+      });
+      y4+=4;
+    }
+    doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...INK); doc.text("Conclusiones",mg,y4); y4+=7;
+    const concText=form.conclusiones||(selectedConcls.length>0?selectedConcls.map(c=>c.text).join(" "): `El resultado de la auditoría evidencia un cumplimiento general del ${totalPct}%. ${equipTotal>=16?"Aunque el equipo se encuentra operativo y con mantenimiento vigente, se recomienda fortalecer la técnica operativa.":"Se recomienda revisión técnica del equipo y la formación del operario."}`);
+    const cLines=doc.splitTextToSize(concText,cW-8);
+    const cBH=cLines.length*5+14;
+    doc.setFillColor(...SND); doc.roundedRect(mg,y4,cW,cBH,3,3,"F");
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(...INK); doc.text(cLines,mg+4,y4+10); y4+=cBH+12;
+    doc.setFillColor(...BR); doc.roundedRect(mg,y4,cW,22,4,4,"F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(26); doc.setTextColor(...WHT); doc.text(`${totalScore} / 100`,W/2,y4+13,{align:"center"});
+    doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(255,255,255,0.65); doc.text(`Cumplimiento: ${totalPct}% · ${scoreLabel(totalScore,100)}`,W/2,y4+19,{align:"center"});
+    y4+=30;
+    if(y4<H-30){
+      doc.setDrawColor(200,200,200); doc.setLineWidth(0.3);
+      doc.line(mg,y4+10,mg+65,y4+10); doc.line(mg+75,y4+10,mg+140,y4+10);
+      doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(...MUT);
+      doc.text(form.responsable?"Auditor: "+form.responsable:"Auditor",mg,y4+15);
+      doc.text(form.responsablePlanta?"Resp. planta: "+form.responsablePlanta:"Responsable planta",mg+75,y4+15);
+    }
+    const nPages=doc.getNumberOfPages();
+    for(let p=1;p<=nPages;p++){
+      doc.setPage(p); doc.setFillColor(...SND); doc.rect(0,H-9,W,9,"F");
+      doc.setFont("helvetica","normal"); doc.setFontSize(6.5); doc.setTextColor(...MUT);
+      doc.text("ALURA · Science for Life · Uso confidencial interno Alura",mg,H-4);
+      doc.text(`Pág. ${p} / ${nPages}`,W-mg,H-4,{align:"right"});
+    }
+    doc.save(`informe_auditoria_${(form.planta||"planta").replace(/\s+/g,"_")}_${form.fecha||"2026"}.pdf`);
+  };
+
   const handleExportHTML = () => {
     const el = document.getElementById("report-body");
     if (!el) return;
@@ -735,8 +898,8 @@ export default function AccuremaxApp() {
     showToast("Plantilla descargada");
   };
 
-  // ── PDF DISEÑADO ───────────────────────────────────────────────────────────
-  const handlePDF = async () => {
+  // handlePDF está definida en ReportView donde tiene acceso a todos los datos calculados
+  const handlePDF_unused = async () => {
     const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const W = 210, H = 297, mg = 16, cW = W - mg * 2;
