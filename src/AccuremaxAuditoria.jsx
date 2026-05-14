@@ -256,208 +256,31 @@ function ReportView({ data, onBack }) {
   ].filter(([, v]) => v && v !== "—");
 
   const handlePDF = async () => {
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    const W = 210, H = 297, mg = 13, cW = W - mg * 2;
-    const BR=[153,57,53], INK=[44,42,40], MUT=[139,139,141];
-    const GRN=[46,125,82], AMB=[133,79,11], SND=[245,242,238], WHT=[255,255,255];
-    const sCol = (s,m) => { const p=m>0?(s/m)*100:0; return p>=80?GRN:p>=50?AMB:BR; };
-    const sLbl = (s,m) => { const p=m>0?(s/m)*100:0; return p>=80?"Adecuado":p>=50?"Regular":"Deficiente"; };
-    let y = 0;
-
-    // HEADER BAR
-    doc.setFillColor(...BR); doc.rect(0,0,W,11,"F");
-    try { const lb=await loadImgBase64("/Asset 63@3x.png"); doc.addImage(lb,"PNG",mg,1.5,30,7,"","FAST"); }
-    catch { doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...WHT); doc.text("ALURA",mg,8); }
-    doc.setFont("helvetica","normal"); doc.setFontSize(6); doc.setTextColor(...WHT);
-    doc.text("USO CONFIDENCIAL · INTERNO ALURA", W-mg, 5, {align:"right"});
-    doc.text(`${form.planta||""}  ·  ${form.fecha||""}`, W-mg, 9, {align:"right"});
-    y = 15;
-
-    // TITLE + SCORE BADGE
-    const sc = sCol(totalScore,100);
-    doc.setFillColor(...sc); doc.roundedRect(W-mg-34, y-2, 34, 15, 2, 2, "F");
-    doc.setFont("helvetica","bold"); doc.setFontSize(17); doc.setTextColor(...WHT);
-    doc.text(`${totalScore}`, W-mg-17, y+7, {align:"center"});
-    doc.setFont("helvetica","normal"); doc.setFontSize(6); doc.setTextColor(255,255,255,0.85);
-    doc.text(`/ 100 · ${sLbl(totalScore,100)}`, W-mg-17, y+11, {align:"center"});
-    doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.setTextColor(...INK);
-    doc.text("Informe de auditoría", mg, y+6);
-    doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(...MUT);
-    doc.text("Medición de magro en canales porcinas", mg, y+11);
-    y += 17;
-
-    // INFO GRID (2 rows x 3 cols)
-    doc.setDrawColor(226,217,208); doc.setLineWidth(0.3); doc.line(mg,y,W-mg,y); y+=4;
-    const infoItems=[["Planta",form.planta||"—"],["Auditor",form.responsable||"—"],["Equipo",form.equipo||"—"],
-      ["Fecha",form.fecha||"—"],["Resp. planta",form.responsablePlanta||"—"],["Operario",form.operario||"—"]];
-    const colW2 = cW/3;
-    infoItems.forEach(([lbl,val],i)=>{
-      const cx=mg+(i%3)*colW2, iy=y+(Math.floor(i/3))*9;
-      doc.setFont("helvetica","normal"); doc.setFontSize(5.5); doc.setTextColor(...MUT);
-      doc.text(lbl.toUpperCase(), cx, iy);
-      doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...INK);
-      doc.text(String(val).slice(0,28), cx, iy+4);
+    const el = document.getElementById("report-body");
+    if (!el) return;
+    const [{ jsPDF }, html2canvas] = await Promise.all([
+      import("jspdf"),
+      import("html2canvas").then(m => m.default),
+    ]);
+    // temporarily hide sticky top bar so it doesn't appear in the capture
+    const topBar = el.previousElementSibling;
+    if (topBar) topBar.style.visibility = "hidden";
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      logging: false,
+      backgroundColor: "#F5F2EE",
     });
-    y += 20;
-
-    // KPI CARDS A / B / C
-    doc.setDrawColor(226,217,208); doc.line(mg,y,W-mg,y); y+=4;
-    const pdfCards=[
-      {lbl:"A. Inspección de canales", score:canalScore, max:60},
-      {lbl:"B. Verificación de la ecuación", score:eqScore!==""?eqNum:0, max:20},
-      {lbl:"C. Estado físico del equipo", score:equipTotal, max:20},
-    ];
-    const cw3p=(cW-4)/3;
-    pdfCards.forEach((c,i)=>{
-      const cx=mg+i*(cw3p+2);
-      const pct=c.max>0?Math.round((c.score/c.max)*100):0;
-      const col=sCol(c.score,c.max);
-      doc.setFillColor(...SND); doc.roundedRect(cx,y,cw3p,20,2,2,"F");
-      doc.setDrawColor(...col); doc.setLineWidth(0.35); doc.roundedRect(cx,y,cw3p,20,2,2,"D");
-      doc.setFont("helvetica","bold"); doc.setFontSize(6); doc.setTextColor(...MUT);
-      doc.text(doc.splitTextToSize(c.lbl,cw3p-4)[0], cx+3, y+5);
-      doc.setFont("helvetica","bold"); doc.setFontSize(17); doc.setTextColor(...col);
-      doc.text(String(c.score), cx+3, y+15);
-      const sw=doc.getTextWidth(String(c.score));
-      doc.setFont("helvetica","normal"); doc.setFontSize(6.5); doc.setTextColor(...MUT);
-      doc.text(`/ ${c.max}  (${pct}%)`, cx+3+sw+1, y+15);
-      const bw=cw3p-6;
-      doc.setFillColor(226,217,208); doc.roundedRect(cx+3,y+17,bw,1.8,0.5,0.5,"F");
-      if(pct>0){doc.setFillColor(...col); doc.roundedRect(cx+3,y+17,bw*pct/100,1.8,0.5,0.5,"F");}
-    });
-    y += 24;
-
-    // CANAL DISTRIBUTION
-    doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(...INK);
-    doc.text("Distribución de canales", mg, y); y+=4;
-    const cItems=[{lbl:"Buena (B)",cnt:canalCounts.B,col:GRN},{lbl:"Regular (R)",cnt:canalCounts.R,col:AMB},
-      {lbl:"Mala (M)",cnt:canalCounts.M,col:BR},{lbl:"Insuficiente (I)",cnt:canalCounts.I,col:[136,135,128]}];
-    const totCan=Object.values(canalCounts).reduce((a,b)=>a+b,0);
-    const bMaxW=cW-46, maxCnt=Math.max(...cItems.map(d=>d.cnt),1);
-    cItems.forEach(d=>{
-      const p2=totCan>0?Math.round((d.cnt/totCan)*100):0;
-      const bW=(d.cnt/maxCnt)*bMaxW;
-      doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(...INK);
-      doc.text(d.lbl, mg, y+4);
-      doc.setFillColor(226,217,208); doc.roundedRect(mg+34,y,bMaxW,5,1,1,"F");
-      if(d.cnt>0){doc.setFillColor(...d.col); doc.roundedRect(mg+34,y,bW,5,1,1,"F");}
-      doc.setFont("helvetica","bold"); doc.setFontSize(7); doc.setTextColor(...d.col);
-      doc.text(`${d.cnt}  (${p2}%)`, mg+34+bMaxW+2, y+4);
-      y+=7;
-    });
-    y+=2;
-
-    // TEXTS B + C (two columns)
-    const eqText = eqObs||(eqNum>=15
-      ?"Se verificaron los resultados de magro, la ecuación aplicada corresponde a la versión vigente 2023. Esta se encuentra implementada de manera consistente y sin desviaciones."
-      :"Se verificaron los resultados de magro, la ecuación aplicada corresponde a la versión vigente 2023. Esta no se encuentra implementada de manera consistente y sin desviaciones.");
-    const eqTxt2 = equipObs||(equipTotal>=16
-      ?"El equipo se encuentra en condiciones adecuadas de funcionamiento. Se evidencia buen mantenimiento y limpieza, contribuyendo a la confiabilidad de los resultados."
-      :"El equipo presenta condiciones de mantenimiento deficientes. Se recomienda revisión técnica, limpieza profunda y mantenimiento preventivo.");
-    const hw=(cW-3)/2;
-    const bLinesPDF=doc.splitTextToSize(`B. Ecuación: ${eqText}`,hw-4);
-    const cLinesPDF=doc.splitTextToSize(`C. Equipo: ${eqTxt2}`,hw-4);
-    const tH=Math.max(Math.min(bLinesPDF.length,4),Math.min(cLinesPDF.length,4))*3.6+8;
-    doc.setFillColor(...SND); doc.roundedRect(mg,y,hw,tH,2,2,"F");
-    doc.setFillColor(...SND); doc.roundedRect(mg+hw+3,y,hw,tH,2,2,"F");
-    doc.setFont("helvetica","normal"); doc.setFontSize(6.5); doc.setTextColor(...INK);
-    doc.text(bLinesPDF.slice(0,4), mg+3, y+5);
-    doc.text(cLinesPDF.slice(0,4), mg+hw+6, y+5);
-    y += tH+4;
-
-    // EVIDENCIA FOTOGRAFICA
-    const hasPhotos=photos.some(p=>p);
-    if(hasPhotos){
-      doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(...INK);
-      doc.text("Evidencia fotográfica", mg, y); y+=4;
-      const imgW=(cW-4)/2, imgH=Math.round(imgW*9/16);
-      for(let i=0;i<2;i++){
-        if(photos[i]){
-          try{
-            const b64=await loadImgBase64(photos[i].url);
-            doc.addImage(b64,"JPEG",mg+i*(imgW+4),y,imgW,imgH,"","FAST");
-            const cap=(photoLabels[i]||"").slice(0,70);
-            if(cap){
-              doc.setFont("helvetica","italic"); doc.setFontSize(6); doc.setTextColor(...MUT);
-              doc.text(doc.splitTextToSize(cap,imgW)[0], mg+i*(imgW+4), y+imgH+3);
-            }
-          }catch(e){}
-        }
-      }
-      y+=imgH+8;
-    }
-
-    // RECOMENDACIONES
-    if(allRecs.length>0){
-      doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(...INK);
-      doc.text(`Recomendaciones (${allRecs.length})`, mg, y); y+=4;
-      const maxRecs=Math.min(allRecs.length,7);
-      for(let i=0;i<maxRecs;i++){
-        const r=allRecs[i];
-        const parts=r.text.split(":");
-        const title=parts[0];
-        const body=parts.slice(1).join(":").trim();
-        doc.setFillColor(...BR); doc.circle(mg+3,y+2.5,2.5,"F");
-        doc.setFont("helvetica","bold"); doc.setFontSize(5.5); doc.setTextColor(...WHT);
-        doc.text(String(i+1),mg+3,y+3.5,{align:"center"});
-        doc.setFont("helvetica","bold"); doc.setFontSize(7); doc.setTextColor(...INK);
-        doc.text(title,mg+8,y+3.5);
-        if(body){
-          doc.setFont("helvetica","normal"); doc.setFontSize(6.5); doc.setTextColor(...MUT);
-          const bLn=doc.splitTextToSize(body,cW-10);
-          doc.text(bLn[0],mg+8,y+7.5);
-          y+=4;
-        }
-        y+=8;
-      }
-      if(allRecs.length>7){
-        doc.setFont("helvetica","italic"); doc.setFontSize(6.5); doc.setTextColor(...MUT);
-        doc.text(`+ ${allRecs.length-7} recomendaciones adicionales`, mg+8, y); y+=6;
-      }
-      y+=2;
-    }
-
-    // CONCLUSIONES
-    doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(...INK);
-    doc.text("Conclusiones", mg, y); y+=4;
-    const concText=form.conclusiones||(selectedConcls.length>0
-      ? selectedConcls.map(c=>c.text).join(" ")
-      : `El resultado de la auditoría evidencia un cumplimiento general del ${totalPct}%. ${
-          equipTotal>=16
-            ?"Aunque el equipo se encuentra operativo y con mantenimiento vigente, se recomienda fortalecer la técnica operativa y asegurar condiciones óptimas para garantizar datos confiables."
-            :"Se recomienda revisión técnica del equipo, fortalecer el mantenimiento preventivo y la formación del operario responsable de la medición."
-        }`);
-    const conclL=doc.splitTextToSize(concText,cW-6);
-    const conclH=Math.min(conclL.length,5)*3.8+9;
-    doc.setFillColor(...SND); doc.roundedRect(mg,y,cW,conclH,2,2,"F");
-    doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(...INK);
-    doc.text(conclL.slice(0,5),mg+4,y+6); y+=conclH+4;
-
-    // SCORE BADGE
-    doc.setFillColor(...BR); doc.roundedRect(mg,y,cW,13,3,3,"F");
-    doc.setFont("helvetica","bold"); doc.setFontSize(16); doc.setTextColor(...WHT);
-    doc.text(`${totalScore} / 100 pts`, W/2, y+8, {align:"center"});
-    doc.setFont("helvetica","normal"); doc.setFontSize(6.5); doc.setTextColor(255,255,255,0.7);
-    doc.text(`Cumplimiento: ${totalPct}% · ${sLbl(totalScore,100)}`, W/2, y+12, {align:"center"});
-    y+=17;
-
-    // FIRMAS
-    if(y<H-20){
-      doc.setDrawColor(200,200,200); doc.setLineWidth(0.25);
-      doc.line(mg,y+6,mg+55,y+6); doc.line(mg+65,y+6,mg+120,y+6);
-      doc.setFont("helvetica","normal"); doc.setFontSize(6.5); doc.setTextColor(...MUT);
-      doc.text(form.responsable?"Auditor: "+form.responsable:"Auditor",mg,y+10);
-      doc.text(form.responsablePlanta?"Resp. planta: "+form.responsablePlanta:"Responsable planta",mg+65,y+10);
-    }
-
-    // FOOTER
-    doc.setFillColor(...SND); doc.rect(0,H-8,W,8,"F");
-    doc.setFont("helvetica","normal"); doc.setFontSize(6); doc.setTextColor(...MUT);
-    doc.text("ALURA · Science for Life · Uso confidencial interno Alura", mg, H-3);
-    doc.text("1 / 1", W-mg, H-3, {align:"right"});
-
-    doc.save(`informe_auditoria_${(form.planta||"planta").replace(/\s+/g,"_")}_${form.fecha||"2026"}.pdf`);
+    if (topBar) topBar.style.visibility = "";
+    const imgData = canvas.toDataURL("image/jpeg", 0.93);
+    const pxW = canvas.width, pxH = canvas.height;
+    const mmW = 210;
+    const mmH = Math.round((pxH / pxW) * mmW);
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: [mmW, mmH] });
+    doc.addImage(imgData, "JPEG", 0, 0, mmW, mmH);
+    const fileName = `informe_auditoria_${(form.planta || "planta").replace(/\s+/g, "_")}_${form.fecha || "2026"}.pdf`;
+    doc.save(fileName);
   };
 
   const handleExportHTML = () => {
@@ -682,7 +505,7 @@ function ReportView({ data, onBack }) {
               const p = photos[i];
               return (
                 <div key={i}>
-                  <div style={{ position: "relative", borderRadius: 8, overflow: "hidden", border: `1px solid ${SandBorder}`, marginBottom: 8, height: 280, background: Sand, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ position: "relative", borderRadius: 8, overflow: "hidden", border: `1px solid ${SandBorder}`, marginBottom: 8, aspectRatio: "3/4", background: Sand, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     {p ? (
                       <>
                         <img src={p.url} alt={PHOTO_LABELS[i]} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
@@ -1133,14 +956,14 @@ export default function AccuremaxApp() {
                 {[0, 1].map(idx => (
                   <div key={idx}>
                     {photos[idx] ? (
-                      <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", border: `1px solid ${SandBorder}`, aspectRatio: "16/9", marginBottom: 8 }}>
+                      <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", border: `1px solid ${SandBorder}`, aspectRatio: "3/4", marginBottom: 8 }}>
                         <img src={photos[idx].url} alt={`Foto ${idx+1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         <button onClick={() => removePhoto(idx)} style={{ position: "absolute", top: 8, right: 8, width: 26, height: 26, borderRadius: "50%", background: "rgba(0,0,0,0.65)", border: "none", color: White, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
                         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.55)", padding: "8px 10px", fontSize: 10, color: White }}>{photos[idx].name}</div>
                       </div>
                     ) : (
                       <div onClick={() => photoRefs[idx].current?.click()}
-                        style={{ aspectRatio: "16/9", border: `2px dashed ${SandBorder}`, borderRadius: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", background: Sand, gap: 8, marginBottom: 8 }}
+                        style={{ aspectRatio: "3/4", border: `2px dashed ${SandBorder}`, borderRadius: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", background: Sand, gap: 8, marginBottom: 8 }}
                         onMouseEnter={e => (e.currentTarget.style.borderColor = B)} onMouseLeave={e => (e.currentTarget.style.borderColor = SandBorder)}>
                         <div style={{ width: 44, height: 44, background: BLight, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={B} strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
