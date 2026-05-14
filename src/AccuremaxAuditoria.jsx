@@ -28,6 +28,20 @@ html,body,#root{min-height:100%;background:#F5F2EE;font-family:'Plus Jakarta San
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-thumb{background:#E2D9D0;border-radius:3px}
 input,select,textarea,button{font-family:'Plus Jakarta Sans',sans-serif}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.report-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.report-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:640px){
+  .grid-2,.report-grid-2,.report-grid-3{grid-template-columns:1fr!important}
+  .grid-3{grid-template-columns:1fr 1fr!important}
+  .grid-4{grid-template-columns:1fr 1fr!important}
+  .hide-mobile{display:none!important}
+  .report-hero-grid{grid-template-columns:1fr!important}
+  .report-hero-img{display:none!important}
+  .tab-label{display:none}
+}
 `;
 
 const Label = ({ children }) => (
@@ -743,6 +757,8 @@ export default function AccuremaxApp() {
   const [customRec, setCustomRec] = useState("");
   const [concls, setConcls] = useState({});
   const [toast, setToast] = useState(null);
+  const [recsOpen, setRecsOpen] = useState(false);
+  const [conclsOpen, setConclsOpen] = useState(false);
   const [recsLibrary, setRecsLibrary] = useState(RECS_LIBRARY);
   const [conclLibrary, setConclLibrary] = useState([]);
 
@@ -845,57 +861,10 @@ export default function AccuremaxApp() {
 
   // ── PLANTILLA EXCEL ────────────────────────────────────────────────────────
   const handleTemplateDownload = () => {
-    const wb = XLSX.utils.book_new();
-    const s1 = XLSX.utils.aoa_to_sheet([
-      ["AUDITORÍA DE MEDICIÓN DE MAGRO EN CANALES PORCINAS — ALURA"],
-      ["Uso confidencial · Interno Alura"],
-      [],
-      ["DATOS GENERALES"],
-      ["Campo", "Valor"],
-      ["Planta de beneficio", ""],
-      ["Fecha de auditoría", ""],
-      ["Auditor", ""],
-      ["Responsable de planta", ""],
-      ["Operario", ""],
-      ["Equipo (GP4 / GP7 / Optigrade / Introscopio)", ""],
-      ["Total canales evaluadas", ""],
-      ["Canales inclinadas", ""],
-      ["Observaciones inspección de canales", ""],
-      ["Observaciones generales", ""],
-    ]);
-    XLSX.utils.book_append_sheet(wb, s1, "Datos generales");
-
-    const s2 = XLSX.utils.aoa_to_sheet([
-      ["CONTEO DE CANALES"], [],
-      ["Clasificación", "Cantidad"],
-      ["Buena (B)", ""], ["Regular (R)", ""], ["Mala (M)", ""], ["Insuficiente (I)", ""],
-    ]);
-    XLSX.utils.book_append_sheet(wb, s2, "Canales");
-
-    const s3 = XLSX.utils.aoa_to_sheet([
-      ["VERIFICACIÓN DEL EQUIPO — GP4 / GP7 / Optigrade"], [],
-      ["Ítem de verificación", "Ponderación", "Calificación (SI / NO)"],
-      ...EQUIP_GP.map(r => [r.item, r.pond, ""]),
-      [], ["Puntuación total (máx 20)", "", ""], ["Observaciones del equipo", "", ""],
-    ]);
-    XLSX.utils.book_append_sheet(wb, s3, "Verificación equipo");
-
-    const s4 = XLSX.utils.aoa_to_sheet([
-      ["VERIFICACIÓN DE LA ECUACIÓN"], [],
-      ["Puntuación (máx 20)", ""], ["Observaciones", ""],
-    ]);
-    XLSX.utils.book_append_sheet(wb, s4, "Verificación ecuación");
-
-    const s5 = XLSX.utils.aoa_to_sheet([
-      ["RECOMENDACIONES — Marca con X las que aplican"], [],
-      ["Categoría", "Recomendación", "Seleccionar (X)"],
-      ...RECS_LIBRARY.map(r => [r.cat, r.text, ""]),
-      [], ["Personalizada", "", ""],
-      [], ["CONCLUSIONES", ""], ["Texto de conclusiones", ""],
-    ]);
-    XLSX.utils.book_append_sheet(wb, s5, "Recomendaciones");
-    XLSX.writeFile(wb, "plantilla_auditoria_magro_alura.xlsx");
-    showToast("Plantilla descargada");
+    const a = document.createElement("a");
+    a.href = "/Plantilla registro de datos_Excel.xlsx";
+    a.download = "Plantilla registro de datos_Excel.xlsx";
+    a.click();
   };
 
   // handlePDF está definida en ReportView donde tiene acceso a todos los datos calculados
@@ -1202,23 +1171,13 @@ export default function AccuremaxApp() {
         <div style={{ minHeight: "100vh", background: Sand }}>
           <div style={{ maxWidth: 860, margin: "0 auto", padding: "24px 24px 48px" }}>
             <div style={{ marginBottom: 20 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-                <div>
-                  <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 22, fontWeight: 700, color: Ink, lineHeight: 1.2 }}>Auditoría del proceso de medición de grasa dorsal en canales porcinas en planta de beneficio</div>
-                  <div style={{ fontSize: 13, color: Muted, marginTop: 6, fontStyle: "italic" }}>Registro de auditoría · Medición de magro</div>
-                </div>
-                <button onClick={handleTemplateDownload}
-                  style={{ display: "flex", alignItems: "center", gap: 8, background: White, border: `1.5px solid ${SandBorder}`, borderRadius: 10, padding: "10px 16px", fontSize: 12, fontWeight: 700, color: Ink, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = B)} onMouseLeave={e => (e.currentTarget.style.borderColor = SandBorder)}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={B} strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="15" x2="12" y2="3"/><polyline points="7 15 12 20 17 15"/></svg>
-                  Descargar plantilla Excel
-                </button>
-              </div>
+              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 20, fontWeight: 700, color: Ink, lineHeight: 1.2 }}>Auditoría de medición de grasa dorsal en canales porcinas</div>
+              <div style={{ fontSize: 13, color: Muted, marginTop: 6, fontStyle: "italic" }}>Registro de auditoría · Medición de magro</div>
             </div>
 
             {/* 01 DATOS */}
             <SectionCard number="01" title="Datos de la visita" subtitle="Información general de la auditoría">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div className="grid-2">
                 <div style={{ gridColumn: "1 / -1" }}>
                   <Label>Planta de beneficio</Label>
                   <Input placeholder="Ej. Frigorífico La Dorada, Planta Mosquera…" value={form.planta} onChange={e => set("planta", e.target.value)} />
@@ -1258,7 +1217,7 @@ export default function AccuremaxApp() {
 
             {/* 02 EXCEL + CANAL COUNTS */}
             <SectionCard number="02" title="Resultados de verificación de canal" subtitle="Ingresa el conteo de canales por clasificación">
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+              <div className="grid-4">
                 {[["B", "Buena", GreenLight, Green], ["R", "Regular", AmberLight, Amber], ["M", "Mala", BLight, B], ["I", "Insuficiente", "#f1efe8", "#888780"]].map(([cat, label, bg, color]) => (
                   <div key={cat} style={{ background: bg, border: `1px solid ${color}33`, borderRadius: 10, padding: "14px 14px 12px", textAlign: "center" }}>
                     <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color, marginBottom: 8 }}>{cat} — {label}</div>
@@ -1381,7 +1340,7 @@ export default function AccuremaxApp() {
 
             {/* 05 FOTOS */}
             <SectionCard number="05" title="Evidencia fotográfica" subtitle={`${photos.filter(Boolean).length} de 2 fotos adjuntas`}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div className="grid-2" style={{ gap: 16 }}>
                 {[0, 1].map(idx => (
                   <div key={idx}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: Ink, marginBottom: 8, lineHeight: 1.4 }}>{PHOTO_LABELS[idx]}</div>
@@ -1409,62 +1368,79 @@ export default function AccuremaxApp() {
 
             {/* 06 RECOMENDACIONES */}
             <SectionCard number="06" title="Recomendaciones" subtitle={`${selectedRecs.length} seleccionada(s)`}>
-              <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 8, background: Sand, border: `1px solid ${SandBorder}` }}>
+              <button onClick={() => setRecsOpen(o => !o)}
+                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 8, background: Sand, border: `1px solid ${SandBorder}`, cursor: "pointer", marginBottom: recsOpen ? 16 : 0 }}>
                 <span style={{ fontSize: 12, color: Muted, fontWeight: 500 }}>
-                  {selectedRecs.length === 0 ? "Selecciona las recomendaciones aplicables." : `${selectedRecs.length} recomendación(es) seleccionada(s).`}
+                  {selectedRecs.length === 0 ? "Toca para ver y seleccionar recomendaciones" : `${selectedRecs.length} seleccionada(s) — toca para editar`}
                 </span>
-              </div>
-              {recCats.map(cat => (
-                <div key={cat} style={{ marginBottom: 18 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: Muted, marginBottom: 8, paddingBottom: 5, borderBottom: `1px solid ${SandBorder}` }}>{cat}</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {recsLibrary.filter(r => r.cat === cat).map(r => {
-                      const isSelected = !!recs[r.id];
-                      return (
-                        <div key={r.id} onClick={() => toggleRec(r.id)}
-                          style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", borderRadius: 8, border: `1.5px solid ${isSelected ? B : SandBorder}`, background: isSelected ? BLight : White, cursor: "pointer", transition: "all .15s" }}>
-                          <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${isSelected ? B : SandBorder}`, background: isSelected ? B : White, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                            {isSelected && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><polyline points="1 4 4 7 9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                          </div>
-                          <span style={{ fontSize: 13, color: isSelected ? B : Ink, fontWeight: isSelected ? 600 : 400, lineHeight: 1.5 }}>{r.text}</span>
-                        </div>
-                      );
-                    })}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={Muted} strokeWidth="2" strokeLinecap="round" style={{ transform: recsOpen ? "rotate(180deg)" : "none", transition: "transform .2s", flexShrink: 0 }}><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              {recsOpen && (
+                <>
+                  {recCats.map(cat => (
+                    <div key={cat} style={{ marginBottom: 18 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: Muted, marginBottom: 8, paddingBottom: 5, borderBottom: `1px solid ${SandBorder}` }}>{cat}</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {recsLibrary.filter(r => r.cat === cat).map(r => {
+                          const isSelected = !!recs[r.id];
+                          return (
+                            <div key={r.id} onClick={() => toggleRec(r.id)}
+                              style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", borderRadius: 8, border: `1.5px solid ${isSelected ? B : SandBorder}`, background: isSelected ? BLight : White, cursor: "pointer", transition: "all .15s" }}>
+                              <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${isSelected ? B : SandBorder}`, background: isSelected ? B : White, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                                {isSelected && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><polyline points="1 4 4 7 9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                              </div>
+                              <span style={{ fontSize: 13, color: isSelected ? B : Ink, fontWeight: isSelected ? 600 : 400, lineHeight: 1.5 }}>{r.text}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  <div>
+                    <Label>Recomendación personalizada</Label>
+                    <Textarea placeholder="Escribe una recomendación específica para esta planta…" value={customRec} onChange={e => setCustomRec(e.target.value)} style={{ minHeight: 60 }} />
                   </div>
-                </div>
-              ))}
-              <div>
-                <Label>Recomendación personalizada</Label>
-                <Textarea placeholder="Escribe una recomendación específica para esta planta…" value={customRec} onChange={e => setCustomRec(e.target.value)} style={{ minHeight: 60 }} />
-              </div>
+                </>
+              )}
             </SectionCard>
 
-            {/* 06b CONCLUSIONES */}
-            <SectionCard number="06b" title="Conclusiones" subtitle={`${selectedConcls.length} seleccionada(s) · Si se llena el campo libre, tiene prioridad`}>
-              {conclLibrary.length === 0 && (
-                <div style={{ padding: "12px 14px", background: Sand, borderRadius: 8, fontSize: 12, color: Muted, marginBottom: 12 }}>
-                  Cargando conclusiones desde el repositorio…
-                </div>
+            {/* 07 CONCLUSIONES */}
+            <SectionCard number="07" title="Conclusiones" subtitle={`${selectedConcls.length} seleccionada(s) · Si se llena el campo libre, tiene prioridad`}>
+              <button onClick={() => setConclsOpen(o => !o)}
+                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 8, background: Sand, border: `1px solid ${SandBorder}`, cursor: "pointer", marginBottom: conclsOpen ? 16 : 12 }}>
+                <span style={{ fontSize: 12, color: Muted, fontWeight: 500 }}>
+                  {selectedConcls.length === 0 ? "Toca para ver y seleccionar conclusiones" : `${selectedConcls.length} seleccionada(s) — toca para editar`}
+                </span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={Muted} strokeWidth="2" strokeLinecap="round" style={{ transform: conclsOpen ? "rotate(180deg)" : "none", transition: "transform .2s", flexShrink: 0 }}><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              {conclsOpen && (
+                <>
+                  {conclLibrary.length === 0 && (
+                    <div style={{ padding: "12px 14px", background: Sand, borderRadius: 8, fontSize: 12, color: Muted, marginBottom: 12 }}>
+                      Cargando conclusiones desde el repositorio…
+                    </div>
+                  )}
+                  {conclCats.map(cat => (
+                    <div key={cat} style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: Muted, marginBottom: 8, paddingBottom: 5, borderBottom: `1px solid ${SandBorder}` }}>{cat}</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {conclLibrary.filter(c => c.cat === cat).map(c => {
+                          const isSel = !!concls[c.id];
+                          return (
+                            <div key={c.id} onClick={() => toggleConcl(c.id)}
+                              style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", borderRadius: 8, border: `1.5px solid ${isSel ? B : SandBorder}`, background: isSel ? BLight : White, cursor: "pointer", transition: "all .15s" }}>
+                              <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${isSel ? B : SandBorder}`, background: isSel ? B : White, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                                {isSel && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><polyline points="1 4 4 7 9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                              </div>
+                              <span style={{ fontSize: 13, color: isSel ? B : Ink, fontWeight: isSel ? 600 : 400, lineHeight: 1.5 }}>{c.text}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </>
               )}
-              {conclCats.map(cat => (
-                <div key={cat} style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: Muted, marginBottom: 8, paddingBottom: 5, borderBottom: `1px solid ${SandBorder}` }}>{cat}</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {conclLibrary.filter(c => c.cat === cat).map(c => {
-                      const isSel = !!concls[c.id];
-                      return (
-                        <div key={c.id} onClick={() => toggleConcl(c.id)}
-                          style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", borderRadius: 8, border: `1.5px solid ${isSel ? B : SandBorder}`, background: isSel ? BLight : White, cursor: "pointer", transition: "all .15s" }}>
-                          <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${isSel ? B : SandBorder}`, background: isSel ? B : White, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                            {isSel && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><polyline points="1 4 4 7 9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                          </div>
-                          <span style={{ fontSize: 13, color: isSel ? B : Ink, fontWeight: isSel ? 600 : 400, lineHeight: 1.5 }}>{c.text}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
               <div style={{ marginTop: 4 }}>
                 <Label>Conclusión personalizada (tiene prioridad sobre las seleccionadas)</Label>
                 <Textarea
@@ -1478,28 +1454,29 @@ export default function AccuremaxApp() {
 
             {/* 07 ACCIONES */}
             <div style={{ background: BDark, borderRadius: 12, overflow: "hidden", marginBottom: 16 }}>
-              <div style={{ background: "#4a1718", padding: "14px 20px", borderBottom: "1px solid rgba(0,0,0,0.3)", display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700, color: White }}>07</span>
-                </div>
-                <div>
-                  <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 15, fontWeight: 700, color: White }}>Acciones</div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 1 }}>Exportar · Guardar borrador · Generar informe</div>
-                </div>
+              <div style={{ background: "#4a1718", padding: "14px 20px", borderBottom: "1px solid rgba(0,0,0,0.3)" }}>
+                <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 15, fontWeight: 700, color: White }}>Acciones</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>Exportar · Generar informe · Descargar plantilla</div>
               </div>
               <div style={{ padding: 20 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+                <div className="grid-3" style={{ marginBottom: 20 }}>
                   <button onClick={handleExport}
-                    style={{ padding: "20px 12px", borderRadius: 10, background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.25)", color: White, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, transition: "background .15s" }}
+                    style={{ padding: "18px 10px", borderRadius: 10, background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.25)", color: White, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, transition: "background .15s" }}
                     onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.2)")} onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}>
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                    <div style={{ textAlign: "center" }}><div style={{ fontSize: 13, fontWeight: 700 }}>Exportar datos</div><div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>Excel · todos los campos</div></div>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                    <div style={{ textAlign: "center" }}><div style={{ fontSize: 12, fontWeight: 700 }}>Exportar datos</div><div style={{ fontSize: 10, opacity: 0.6, marginTop: 1 }}>Excel</div></div>
                   </button>
                   <button onClick={() => setView("report")}
-                    style={{ padding: "20px 12px", borderRadius: 10, background: White, border: `1.5px solid ${White}`, color: B, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, transition: "background .15s" }}
+                    style={{ padding: "18px 10px", borderRadius: 10, background: White, border: `1.5px solid ${White}`, color: B, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, transition: "background .15s" }}
                     onMouseEnter={e => (e.currentTarget.style.background = "#f5e8e8")} onMouseLeave={e => (e.currentTarget.style.background = White)}>
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={B} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg>
-                    <div style={{ textAlign: "center" }}><div style={{ fontSize: 13, fontWeight: 700 }}>Generar informe</div><div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>Ver informe completo</div></div>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={B} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                    <div style={{ textAlign: "center" }}><div style={{ fontSize: 12, fontWeight: 700 }}>Generar informe</div><div style={{ fontSize: 10, opacity: 0.7, marginTop: 1 }}>Ver informe</div></div>
+                  </button>
+                  <button onClick={handleTemplateDownload}
+                    style={{ padding: "18px 10px", borderRadius: 10, background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.25)", color: White, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, transition: "background .15s" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.2)")} onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="15" x2="12" y2="3"/><polyline points="7 15 12 20 17 15"/></svg>
+                    <div style={{ textAlign: "center" }}><div style={{ fontSize: 12, fontWeight: 700 }}>Plantilla Excel</div><div style={{ fontSize: 10, opacity: 0.6, marginTop: 1 }}>Descargar</div></div>
                   </button>
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
