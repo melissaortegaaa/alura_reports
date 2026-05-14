@@ -42,6 +42,13 @@ input,select,textarea,button{font-family:'Plus Jakarta Sans',sans-serif}
   .report-hero-img{display:none!important}
   .tab-label{display:none}
 }
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .no-print{display:none!important}
+  body{background:#F5F2EE!important;margin:0;padding:0}
+  #report-body{max-width:100%!important;padding:16px!important;margin:0 auto!important}
+  #report-body *{page-break-inside:avoid}
+}
 `;
 
 const Label = ({ children }) => (
@@ -142,9 +149,9 @@ function RadialGauge({ pct, size = 140, color, label }) {
       <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={10}
         strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
         transform={`rotate(-90 ${size/2} ${size/2})`} style={{ transition: "stroke-dasharray 1s ease" }} />
-      <text x={size/2} y={size/2 - 6} textAnchor="middle" fill={color}
-        style={{ fontFamily: "'Nunito',sans-serif", fontSize: size * 0.22, fontWeight: 700 }}>{pct}%</text>
-      <text x={size/2} y={size/2 + 14} textAnchor="middle" fill={color}
+      <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="middle" fill={color}
+        style={{ fontFamily: "'Nunito',sans-serif", fontSize: size * 0.30, fontWeight: 700 }}>{pct}%</text>
+      <text x={size/2} y={size/2 + size * 0.20} textAnchor="middle" fill={color}
         style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: size * 0.09, fontWeight: 600 }}>{label}</text>
     </svg>
   );
@@ -207,11 +214,12 @@ function ReportView({ data, onBack }) {
   const desviaciones = mR + iR;
   const desvPct = totalCanales > 0 ? Math.round((desviaciones / totalCanales) * 100) : 0;
 
+  const eqObt = eqScore !== "" ? eqNum : 0;
   const barData = [
-    { name: "Inspección canales", obtenido: canalScore, maximo: 60 },
-    { name: "Verif. ecuación", obtenido: eqScore !== "" ? eqNum : 0, maximo: 20 },
-    { name: "Estado equipo", obtenido: equipTotal, maximo: 20 },
-    { name: "Resultados", obtenido: totalScore, maximo: 100 },
+    { name: "Inspección canales", obtenido: canalScore,  maximo: 60,  pct: Math.round((canalScore / 60)  * 100) },
+    { name: "Verif. ecuación",    obtenido: eqObt,        maximo: 20,  pct: Math.round((eqObt / 20)        * 100) },
+    { name: "Estado equipo",      obtenido: equipTotal,  maximo: 20,  pct: Math.round((equipTotal / 20)   * 100) },
+    { name: "Resultados",         obtenido: totalScore,  maximo: 100, pct: totalPct },
   ];
 
   const infoFields = [
@@ -274,7 +282,7 @@ function ReportView({ data, onBack }) {
   return (
     <div style={{ background: Sand, minHeight: "100vh" }}>
       {/* TOP BAR */}
-      <div style={{ background: White, borderBottom: `1px solid ${SandBorder}`, padding: "11px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, position: "sticky", top: 0, zIndex: 10 }}>
+      <div className="no-print" style={{ background: White, borderBottom: `1px solid ${SandBorder}`, padding: "11px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div>
             <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 15, fontWeight: 700, color: Ink }}>Informe de auditoría — Magro en canales porcinas</div>
@@ -340,7 +348,15 @@ function ReportView({ data, onBack }) {
                     <Tooltip formatter={(v, n) => [v, n === "obtenido" ? "Puntuación obtenida" : "Ponderación máxima"]} />
                     <Bar dataKey="maximo" fill="#E2D9D0" radius={[0,3,3,0]} barSize={11} name="maximo" />
                     <Bar dataKey="obtenido" fill={B} radius={[0,3,3,0]} barSize={11} name="obtenido">
-                      <LabelList dataKey="obtenido" position="right" style={{ fontSize: 11, fontWeight: 700, fill: B }} />
+                      <LabelList dataKey="obtenido" position="right" content={({ x, y, width, height, value, index }) => {
+                        const d = barData[index];
+                        return (
+                          <text x={x + width + 6} y={y + height / 2} textAnchor="start" dominantBaseline="middle">
+                            <tspan style={{ fontSize: 10, fontWeight: 700, fill: B }}>{value}</tspan>
+                            <tspan style={{ fontSize: 10, fontWeight: 400, fill: Muted }}> ({d?.pct ?? 0}%)</tspan>
+                          </text>
+                        );
+                      }} />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -403,14 +419,14 @@ function ReportView({ data, onBack }) {
               <div style={{ width: 28, height: 28, borderRadius: 6, background: BLight, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={B} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               </div>
-              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700, color: Ink }}>A. Inspección de canales</div>
+              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700, color: Ink }}>A. Inspección de canales</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, padding: "7px 10px", background: scoreSt(canalScore,60).bg, borderRadius: 8, border: `1px solid ${scoreSt(canalScore,60).color}33` }}>
-              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 22, fontWeight: 700, color: scoreSt(canalScore,60).color, lineHeight: 1 }}>{canalScore}</div>
+              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 20, fontWeight: 700, color: scoreSt(canalScore,60).color, lineHeight: 1 }}>{canalScore}</div>
               <div style={{ fontSize: 10, color: scoreSt(canalScore,60).color, lineHeight: 1.4 }}>de 60 pts<br/><strong>{Math.round((canalScore/60)*100)}%</strong></div>
             </div>
-            {form.canalObs && <p style={{ fontSize: 12, color: Ink, lineHeight: 1.7, marginBottom: 8 }}>{form.canalObs}</p>}
-            {totalCanales > 0 && form.canalesInclinadas && <p style={{ fontSize: 12, color: Ink, lineHeight: 1.7 }}>
+            {form.canalObs && <p style={{ fontSize: 11, color: Ink, lineHeight: 1.7, marginBottom: 8 }}>{form.canalObs}</p>}
+            {totalCanales > 0 && form.canalesInclinadas && <p style={{ fontSize: 11, color: Ink, lineHeight: 1.7 }}>
               {`Durante la inserción del equipo ${form.equipo}, se presentaron inclinaciones en ${form.canalesInclinadas} canales (${Math.round((Number(form.canalesInclinadas)/totalCanales)*100)}%), afectando la perpendicularidad y la precisión del procedimiento.`}
             </p>}
           </div>
@@ -421,15 +437,15 @@ function ReportView({ data, onBack }) {
               <div style={{ width: 28, height: 28, borderRadius: 6, background: BLight, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={B} strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="15" x2="13" y2="15"/></svg>
               </div>
-              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700, color: Ink }}>B. Verificación de la ecuación</div>
+              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700, color: Ink }}>B. Verificación de la ecuación</div>
             </div>
             {eqScore !== "" ? (
               <>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, padding: "7px 10px", background: scoreSt(eqNum,20).bg, borderRadius: 8, border: `1px solid ${scoreSt(eqNum,20).color}33` }}>
-                  <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 22, fontWeight: 700, color: scoreSt(eqNum,20).color, lineHeight: 1 }}>{eqScore}</div>
+                  <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 20, fontWeight: 700, color: scoreSt(eqNum,20).color, lineHeight: 1 }}>{eqScore}</div>
                   <div style={{ fontSize: 10, color: scoreSt(eqNum,20).color, lineHeight: 1.4 }}>de 20 pts<br/><strong>{Math.round((eqNum/20)*100)}%</strong></div>
                 </div>
-                <p style={{ fontSize: 12, color: Ink, lineHeight: 1.7 }}>
+                <p style={{ fontSize: 11, color: Ink, lineHeight: 1.7 }}>
                   {eqObs || (eqNum === 20
                     ? "Se verificaron los resultados de magro, la ecuación aplicada corresponde a la versión vigente 2023. Esta se encuentra implementada de manera consistente y sin desviaciones."
                     : eqNum === 10
@@ -446,15 +462,15 @@ function ReportView({ data, onBack }) {
               <div style={{ width: 28, height: 28, borderRadius: 6, background: BLight, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={B} strokeWidth="2" strokeLinecap="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
               </div>
-              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700, color: Ink }}>C. Verificación del estado físico del equipo</div>
+              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700, color: Ink, lineHeight: 1.3 }}>C. Estado físico del equipo</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, padding: "7px 10px", background: scoreSt(equipTotal,20).bg, borderRadius: 8, border: `1px solid ${scoreSt(equipTotal,20).color}33` }}>
-              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 22, fontWeight: 700, color: scoreSt(equipTotal,20).color, lineHeight: 1 }}>{equipTotal}</div>
+              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 20, fontWeight: 700, color: scoreSt(equipTotal,20).color, lineHeight: 1 }}>{equipTotal}</div>
               <div style={{ fontSize: 10, color: scoreSt(equipTotal,20).color, lineHeight: 1.4 }}>de 20 pts<br/><strong>{Math.round((equipTotal/20)*100)}%</strong></div>
             </div>
             {equipObs
-              ? <p style={{ fontSize: 12, color: Ink, lineHeight: 1.7 }}>{equipObs}</p>
-              : <p style={{ fontSize: 12, color: "#8B8B8D", lineHeight: 1.7, fontStyle: "italic" }}>Sin observaciones del equipo registradas.</p>}
+              ? <p style={{ fontSize: 11, color: Ink, lineHeight: 1.7 }}>{equipObs}</p>
+              : <p style={{ fontSize: 11, color: "#8B8B8D", lineHeight: 1.7, fontStyle: "italic" }}>Sin observaciones del equipo registradas.</p>}
           </div>
         </div>
 
@@ -489,70 +505,85 @@ function ReportView({ data, onBack }) {
           </div>
         </div>
 
-        {/* RECOMENDACIONES + CONCLUSIONES */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
-          <div style={{ background: White, border: `1px solid ${SandBorder}`, borderRadius: 12, padding: 18 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: `1px solid ${SandBorder}` }}>
-              <div style={{ width: 4, height: 18, background: B, borderRadius: 2 }} />
-              <span style={{ fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 700, color: Ink }}>Recomendaciones</span>
-              {allRecs.length > 0 && <span style={{ background: BLight, color: B, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>{allRecs.length}</span>}
-            </div>
-            {allRecs.length > 0 ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {allRecs.map((r, i) => {
-                  const recTitle = r.text.split(":")[0];
-                  const recBody = r.text.includes(":") ? r.text.split(":").slice(1).join(":").trim() : "";
-                  return (
-                    <div key={r.id} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                      <div style={{ width: 30, height: 30, borderRadius: "50%", background: B, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        {iconSvgs[i % 4]}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: Ink, marginBottom: 2 }}>{recTitle}</div>
-                        {recBody && <div style={{ fontSize: 12, color: Muted, lineHeight: 1.55 }}>{recBody}</div>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : <div style={{ padding: "24px 0", textAlign: "center", color: Muted, fontSize: 12, fontStyle: "italic" }}>Sin recomendaciones seleccionadas</div>}
+        {/* RECOMENDACIONES (full width) */}
+        <div style={{ background: White, border: `1px solid ${SandBorder}`, borderRadius: 12, padding: 18, marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: `1px solid ${SandBorder}` }}>
+            <div style={{ width: 4, height: 18, background: B, borderRadius: 2 }} />
+            <span style={{ fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 700, color: Ink }}>Recomendaciones</span>
+            {allRecs.length > 0 && <span style={{ background: BLight, color: B, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>{allRecs.length}</span>}
           </div>
-
-          <div style={{ background: White, border: `1px solid ${SandBorder}`, borderRadius: 12, padding: 18 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: `1px solid ${SandBorder}` }}>
-              <div style={{ width: 4, height: 18, background: B, borderRadius: 2 }} />
-              <span style={{ fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 700, color: Ink }}>Conclusiones</span>
+          {allRecs.length > 0 ? (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 24px" }}>
+              {allRecs.map((r, i) => {
+                const recTitle = r.text.split(":")[0];
+                const recBody = r.text.includes(":") ? r.text.split(":").slice(1).join(":").trim() : "";
+                return (
+                  <div key={r.id} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: B, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                      {iconSvgs[i % 4]}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: Ink, marginBottom: 2 }}>{recTitle}</div>
+                      {recBody && <div style={{ fontSize: 11, color: Muted, lineHeight: 1.55 }}>{recBody}</div>}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {form.conclusiones
-                ? <p style={{ fontSize: 12, color: Ink, lineHeight: 1.75 }}>{form.conclusiones}</p>
-                : selectedConcls.length > 0
-                  ? selectedConcls.map(c => <p key={c.id} style={{ fontSize: 12, color: Ink, lineHeight: 1.75 }}>{c.text}</p>)
-                  : <>
-                      <p style={{ fontSize: 12, color: Ink, lineHeight: 1.75 }}>
-                        {`El resultado de la auditoría evidencia un cumplimiento general del ${totalPct}%.`}
-                      </p>
-                      {desviaciones > 0 && <p style={{ fontSize: 12, color: Ink, lineHeight: 1.75 }}>
-                        {`Se identificaron desviaciones relacionadas con la técnica de medición, la alineación del equipo, acumulación de grasa en el punto de inserción (${desvPct}% de las canales clasificadas M o I), las cuales pueden afectar la precisión y consistencia de los datos entregados al cliente.`}
-                      </p>}
-                      <p style={{ fontSize: 12, color: Ink, lineHeight: 1.75 }}>
-                        {equipTotal >= 16
-                          ? "Aunque el equipo se encuentra operativo y con mantenimiento vigente, se recomienda fortalecer la técnica operativa, estandarizar el proceso y asegurar condiciones óptimas del equipo para garantizar datos confiables."
-                          : "Se recomienda revisión técnica del equipo, fortalecer el mantenimiento preventivo y la formación del operario responsable de la medición."}
-                      </p>
-                    </>
-              }
-              <div style={{ marginTop: 4, padding: "10px 14px", background: overallSt.bg, borderRadius: 8, border: `1px solid ${overallSt.color}33`, display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 26, fontWeight: 700, color: overallSt.color, lineHeight: 1 }}>{totalScore}/100</div>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: overallSt.color }}>{totalPct}%</div>
-                  <div style={{ fontSize: 11, color: overallSt.color, opacity: 0.75 }}>Puntaje final de la auditoría</div>
-                </div>
+          ) : <div style={{ padding: "20px 0", textAlign: "center", color: Muted, fontSize: 12, fontStyle: "italic" }}>Sin recomendaciones seleccionadas</div>}
+        </div>
+
+        {/* CONCLUSIONES — bloque independiente con peso visual */}
+        <div style={{ background: Ink, borderRadius: 14, overflow: "hidden", marginBottom: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr auto" }}>
+            <div style={{ padding: "28px 32px" }}>
+              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Auditoría de medición de magro · Conclusiones</div>
+              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 18, fontWeight: 700, color: White, marginBottom: 14, lineHeight: 1.2 }}>Conclusión general</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {form.conclusiones
+                  ? <p style={{ fontSize: 13, color: "rgba(255,255,255,0.88)", lineHeight: 1.75 }}>{form.conclusiones}</p>
+                  : selectedConcls.length > 0
+                    ? selectedConcls.map(c => <p key={c.id} style={{ fontSize: 13, color: "rgba(255,255,255,0.88)", lineHeight: 1.75 }}>{c.text}</p>)
+                    : <>
+                        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.88)", lineHeight: 1.75 }}>
+                          {`El resultado de la auditoría evidencia un cumplimiento general del ${totalPct}%.`}
+                        </p>
+                        {desviaciones > 0 && <p style={{ fontSize: 13, color: "rgba(255,255,255,0.88)", lineHeight: 1.75 }}>
+                          {`Se identificaron desviaciones en ${desvPct}% de las canales (clasificadas M o I), las cuales pueden afectar la precisión y consistencia de los datos entregados al cliente.`}
+                        </p>}
+                        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.88)", lineHeight: 1.75 }}>
+                          {equipTotal >= 16
+                            ? "El equipo se encuentra operativo y con mantenimiento vigente. Se recomienda fortalecer la técnica operativa y estandarizar el proceso para garantizar datos confiables."
+                            : "Se recomienda revisión técnica del equipo, fortalecer el mantenimiento preventivo y la formación del operario responsable de la medición."}
+                        </p>
+                      </>
+                }
               </div>
+              {/* Firma */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 28 }}>
+                {[["Auditor responsable", form.responsable], ["Responsable planta", form.responsablePlanta]].map(([lbl, val]) => (
+                  <div key={lbl}>
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.25)", paddingTop: 8 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: White, minHeight: 18 }}>{val || ""}</div>
+                      <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginTop: 3 }}>{lbl}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Score badge lateral */}
+            <div style={{ padding: "28px 28px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, borderLeft: "1px solid rgba(255,255,255,0.1)", minWidth: 160 }}>
+              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 52, fontWeight: 700, color: overallSt.color, lineHeight: 1 }}>{totalPct}%</div>
+              <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>{totalScore}/100</div>
+              <div style={{ marginTop: 6, background: overallSt.bg, border: `1px solid ${overallSt.color}55`, borderRadius: 20, padding: "4px 14px" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: overallSt.color, letterSpacing: "0.08em", textTransform: "uppercase" }}>{overallSt.label}</span>
+              </div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 4, textAlign: "center", lineHeight: 1.5 }}>Puntaje final<br />de la auditoría</div>
             </div>
           </div>
         </div>
 
+        {/* FOOTER */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 14, borderTop: `1px solid ${SandBorder}` }}>
           <span style={{ fontSize: 11, color: Muted }}>Reporte auditoría medición de magro · Alura · 2026</span>
           <span style={{ fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700, color: B }}>{totalPct}% · {totalScore}/100 pts</span>
@@ -721,7 +752,7 @@ export default function AccuremaxApp() {
       )}
 
       {/* HEADER with tabs */}
-      <div style={{ background: B, borderBottom: `3px solid ${BDark}` }}>
+      <div className="no-print" style={{ background: B, borderBottom: `3px solid ${BDark}` }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "stretch", justifyContent: "space-between" }}>
           <div style={{ padding: "10px 0", display: "flex", alignItems: "center", gap: 14 }}>
             <img src="/Asset 63@3x.png" alt="Alura" style={{ height: 36, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
