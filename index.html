@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programa de medicación soluble · Alura</title>
+<link rel="icon" type="image/png" href="https://alura-reports-binz.vercel.app/logo%20alura.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  /* ── Typography tokens ── */
+  --font-main:'Inter',system-ui,sans-serif;
+
+  /* ── Color tokens ── */
+  --red:#7C2D2D;          /* C.accent – header, primary buttons */
+  --coral:#C0453A;        /* C.coral  – alerts, errors, negative values */
+  --green:#2A6B45;        /* C.green  – positive values */
+  --green-light:#EAF3EE;  /* C.greenL – positive backgrounds */
+  --gray:#8A7F78;         /* C.gray   – tertiary text, inactive icons */
+  --gray-light:#C8C0BB;
+  --text:#1C1410;         /* C.text   – warm near-black */
+  --text-muted:#6B5F58;   /* C.muted  – secondary text */
+  --border:#DDD6D1;       /* C.border */
+  --bg:#F0EBE8;           /* C.bg     – page background */
+  --gray-bg:#FAF7F6;      /* C.bgSection */
+  --card:#FFFFFF;         /* C.bgCard */
+  --warn-bg:#FFF8E1;--warn-border:#D97706;--warn-text:#7A4F00;
+  --danger-bg:#FEF0EE;--danger-border:var(--coral);--danger-text:#7A1F1F;
+  --syn-bg:#EAF3EE;--syn-border:var(--green);--syn-text:#1B4D32;
+
+  /* ── Border radius tokens ── */
+  --r-card:14px;
+  --r-btn:8px;
+  --r-input:7px;
+  --r-badge:6px;
+  --r-kpi:10px;
+}
+body{font-family:var(--font-main);background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── HEADER ── */
+header{background:var(--red);color:white;display:flex;align-items:stretch;}
+.header-brand{display:flex;align-items:center;gap:14px;padding:12px 28px;border-right:1px solid rgba(255,255,255,.15);}
+.header-brand img{height:28px;}
+.header-brand .sep{width:1px;height:34px;background:rgba(255,255,255,.3);}
+.header-brand .confidencial{line-height:1.3;}
+.header-brand .confidencial div:first-child{font-size:10px;font-weight:700;letter-spacing:.1em;opacity:.85;}
+.header-brand .confidencial div:last-child{font-size:10px;letter-spacing:.07em;opacity:.6;}
+.header-app{display:flex;align-items:center;padding:0 24px;flex:1;}
+.header-app span{font-size:15px;font-weight:700;letter-spacing:.04em;opacity:.9;}
+.header-tabs{display:flex;align-items:stretch;}
+.tab-btn{padding:0 28px;font-size:13px;font-weight:600;letter-spacing:.02em;color:rgba(255,255,255,.65);background:none;border:none;cursor:pointer;font-family:var(--font-main);transition:all .15s;border-bottom:3px solid transparent;position:relative;}
+.tab-btn:hover{color:white;background:rgba(0,0,0,.1);}
+.tab-btn.active{color:white;background:rgba(0,0,0,.15);border-bottom:3px solid white;}
+
+/* ── HEADER TITLE ── */
+.header-title{display:flex;align-items:center;padding:0 20px;flex:1;}
+.header-title span{font-size:13px;font-weight:700;letter-spacing:.03em;opacity:.9;line-height:1.3;}
+/* ── HEADER ACTIONS ── */
+.header-actions{display:flex;align-items:center;gap:8px;padding:0 16px;border-left:1px solid rgba(255,255,255,.15);}
+.hdr-btn{font-size:12px;font-weight:700;padding:7px 14px;border-radius:7px;cursor:pointer;font-family:var(--font-main);letter-spacing:.04em;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:white;transition:all .15s;}
+.hdr-btn:hover{background:rgba(255,255,255,.22);}
+.hdr-btn.danger{border-color:rgba(255,255,255,.25);background:rgba(0,0,0,.15);}
+.hdr-btn.danger:hover{background:rgba(0,0,0,.28);}
+/* ── LAYOUT ── */
+.page{display:none;flex:1;}
+.page.active{display:block;}
+.container{max-width:1300px;margin:0 auto;padding:24px 20px;}
+
+/* ── PAGE TITLE ── */
+.page-title{margin-bottom:20px;}
+.page-title h2{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.01em;}
+.page-title p{font-size:13px;color:var(--text-muted);margin-top:3px;}
+
+/* ── SECTIONS ── */
+.section{background:var(--card);border-radius:var(--r-card);border:1px solid var(--border);margin-bottom:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;cursor:pointer;user-select:none;}
+.section-header:hover{background:#fafafa;}
+.sec-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--gray);}
+.sec-badge{font-size:12px;background:var(--gray-bg);border:1px solid var(--border);border-radius:var(--r-badge);padding:2px 10px;color:var(--text-muted);}
+.chevron{font-size:14px;color:var(--gray-light);transition:transform .2s;}
+.chevron.open{transform:rotate(180deg);}
+.sec-body{padding:0 22px 20px;border-top:1px solid var(--border);}
+.sec-body.collapsed{display:none;}
+
+/* ── TOOLTIPS ── */
+.tip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--gray-bg);color:var(--text-muted);font-size:10px;font-weight:700;cursor:help;margin-left:5px;position:relative;border:1px solid var(--border);flex-shrink:0;vertical-align:middle;}
+.tip::before{content:'?';}
+.tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:#1A1A1A;color:white;padding:7px 12px;border-radius:7px;font-size:11px;font-weight:400;white-space:normal;max-width:240px;text-align:center;opacity:0;pointer-events:none;transition:opacity .15s;z-index:1000;line-height:1.5;width:max-content;}
+.tip:hover::after{opacity:1;}
+
+/* ── COPY HINT ── */
+.copyable{cursor:pointer;transition:opacity .15s;}
+.copyable:hover{opacity:.75;}
+.copyable:hover::after{content:" 📋";font-size:.7em;vertical-align:super;}
+
+/* ── FORMS ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;padding-top:18px;}
+.field input.invalid,.field select.invalid{border-color:var(--danger-border)!important;background:#FFF8F8;}
+.field .field-error{font-size:11px;color:var(--danger-text);margin-top:3px;display:none;}
+.field input.invalid+.field-error,.field select.invalid+.field-error{display:block;}
+.toast{position:fixed;bottom:24px;right:24px;background:#1A1A1A;color:white;padding:12px 18px;border-radius:8px;font-size:13px;z-index:9998;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:13px;color:var(--text-muted);font-weight:500;}
+.field input,.field select{border:1px solid var(--border);border-radius:var(--r-input);padding:8px 12px;font-size:14px;font-family:var(--font-main);color:var(--text);background:var(--card);}
+.field input:focus,.field select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(153,57,53,.08);}
+
+/* ── PROD CARDS ── */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;padding-top:16px;margin-bottom:14px;}
+.prod-card{border:1px solid var(--border);border-radius:var(--r-card);padding:16px 18px;position:relative;}
+.prod-name{font-size:15px;font-weight:700;border:none;background:transparent;width:calc(100% - 28px);font-family:var(--font-main);padding:0;margin-bottom:12px;color:var(--text);}
+.prod-name:focus{outline:none;border-bottom:1px solid var(--red);}
+.prod-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.prod-inputs label{font-size:11px;color:var(--text-muted);font-weight:700;display:block;margin-bottom:3px;}
+.prod-inputs input{width:100%;border:1px solid var(--border);border-radius:var(--r-input);padding:7px 9px;font-size:14px;font-family:var(--font-main);text-align:right;}
+.prod-class-row{margin-top:10px;display:flex;align-items:center;gap:8px;}
+.prod-class-row label{font-size:12px;color:var(--text-muted);font-weight:700;white-space:nowrap;}
+.prod-class-row select{font-size:13px;border:1px solid var(--border);border-radius:6px;padding:6px 9px;font-family:var(--font-main);flex:1;}
+.del-btn{position:absolute;top:12px;right:12px;background:none;border:none;cursor:pointer;color:var(--gray-light);font-size:20px;line-height:1;}
+.del-btn:hover{color:var(--red);}
+.add-btn{font-size:14px;padding:9px 18px;cursor:pointer;border-radius:var(--r-btn);border:1px solid var(--border);background:white;color:var(--text-muted);font-family:var(--font-main);}
+.add-btn:hover{border-color:var(--green);color:var(--green);}
+
+/* ── PREMIX ── */
+.premix-card{border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;border-left:4px solid #B5845A;}
+.premix-sems{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+.sem-btn{font-size:12px;padding:4px 11px;border-radius:12px;border:1px solid var(--border);background:white;cursor:pointer;font-family:var(--font-main);color:var(--text-muted);}
+.sem-btn.active{background:#B5845A;color:white;border-color:#B5845A;}
+
+/* ── TABLA ── */
+table{width:100%;border-collapse:collapse;font-size:14px;}
+thead th{font-size:12px;font-weight:700;color:var(--text-muted);text-align:right;padding:10px 12px;border-bottom:2px solid var(--border);background:var(--gray-bg);white-space:nowrap;}
+thead th:first-child,thead th:nth-child(2){text-align:center;}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:right;vertical-align:middle;}
+tbody td:first-child{text-align:center;font-size:13px;color:var(--text-muted);font-weight:700;}
+tbody td:nth-child(2){text-align:center;font-size:13px;}
+tbody td.ck{text-align:center;padding:6px 4px;cursor:pointer;user-select:none;}
+tbody td.ck:hover{background:rgba(153,57,53,.05);}
+tbody td.amt{font-weight:700;color:var(--red);font-size:14px;}
+tbody tr.inactive{opacity:.4;}
+tfoot td{padding:11px 12px;font-weight:700;font-size:14px;border-top:2px solid var(--border);background:var(--gray-bg);text-align:right;}
+tfoot td:first-child{text-align:left;}
+tfoot td.grand{color:var(--red);font-size:16px;}
+.ck-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.ck-val{font-size:11px;color:var(--green);font-weight:700;}
+input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--green);pointer-events:none;}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;margin-left:4px;}
+.pill-p{background:#FFF3E0;color:#7A4F00;}
+
+/* ── MÉTRICAS ── */
+.metrics-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px;}
+.metric{background:var(--gray-bg);border-radius:10px;padding:18px 20px;border:1px solid var(--border);}
+.metric-label{font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;}
+.metric-value{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.02em;}
+.metric-value.accent{color:var(--red);}
+.metric-sub{font-size:12px;color:var(--text-muted);margin-top:5px;}
+
+/* ── SLIDER ── */
+.slider-box{background:var(--gray-bg);border-radius:12px;padding:18px 22px;margin-bottom:20px;border:1px solid var(--border);}
+.slider-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.slider-label span{font-size:14px;color:var(--text-muted);font-weight:700;}
+.slider-label strong{font-size:20px;color:var(--red);font-weight:700;}
+input[type=range]{-webkit-appearance:none;width:100%;height:7px;border-radius:4px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--red);cursor:pointer;box-shadow:0 2px 6px rgba(153,57,53,.35);}
+.escenarios{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px;}
+.esc-card{border-radius:10px;padding:14px 16px;text-align:center;border:2px solid transparent;cursor:pointer;}
+.esc-card.pesimista{background:var(--warn-bg);border-color:var(--warn-border);}
+.esc-card.base{background:#fafafa;border-color:var(--border);}
+.esc-card.optimista{background:var(--green-light);border-color:var(--green);}
+.esc-card.active-esc{box-shadow:0 0 0 3px rgba(153,57,53,.2);border-color:var(--red)!important;}
+.esc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;color:var(--text-muted);}
+.esc-valor{font-size:20px;font-weight:700;color:var(--text);}
+.esc-pct{font-size:12px;color:var(--text-muted);margin-top:3px;}
+
+/* ── PARETO ── */
+.pareto-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.pareto-name{font-size:13px;font-weight:700;width:140px;flex-shrink:0;text-align:right;color:var(--text);}
+.pareto-bg{flex:1;background:var(--gray-bg);border-radius:4px;height:30px;overflow:hidden;position:relative;}
+.pareto-fill{height:100%;border-radius:4px;background:var(--red);transition:width .4s;}
+.pareto-pct{font-size:11px;color:var(--text-muted);width:36px;text-align:right;flex-shrink:0;}
+.pareto-val{font-size:13px;font-weight:700;color:var(--red);width:72px;flex-shrink:0;}
+
+/* ── RESUMEN CASO ── */
+.resumen-caso{background:#fafafa;border-left:4px solid var(--red);border-radius:0 10px 10px 0;padding:14px 18px;margin-bottom:20px;font-size:14px;line-height:1.7;}
+
+/* ── BRECHA ── */
+.brecha-palanca{display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:12px 16px;background:#fafafa;border-radius:8px;border-left:3px solid var(--red);}
+
+/* ── BOTONES ACCIÓN ── */
+.action-bar{display:flex;gap:10px;justify-content:flex-end;padding:0 20px 20px;max-width:1300px;margin:0 auto;}
+.btn-primary{font-size:13px;padding:9px 20px;cursor:pointer;border-radius:var(--r-btn);border:1px solid var(--border);background:white;color:var(--text);font-family:var(--font-main);display:flex;align-items:center;gap:6px;}
+.btn-danger{font-size:13px;padding:9px 20px;cursor:pointer;border-radius:var(--r-btn);border:1px solid var(--danger-border);background:white;color:var(--danger-text);font-family:var(--font-main);}
+.btn-danger:hover{background:var(--danger-bg);}
+
+/* ── VALOR TAB ── */
+.vtabs{display:flex;gap:0;margin-bottom:22px;border-bottom:2px solid var(--border);}
+.vtab-btn{font-size:13px;font-weight:600;padding:10px 20px;cursor:pointer;border:none;background:none;color:var(--text-muted);font-family:var(--font-main);letter-spacing:.02em;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.vtab-btn:hover{color:var(--text);background:var(--gray-bg);}
+.vtab-btn.active{color:var(--red);border-bottom-color:var(--red);}
+.vtab-pane{display:none;}.vtab-pane.active{display:block;}
+.dos-params{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:4px;}
+.dos-param{display:flex;flex-direction:column;gap:5px;}
+.dos-param label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;}
+.dos-param-inner{display:flex;align-items:center;gap:6px;}
+.dos-param input{width:100%;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:14px;font-family:var(--font-main);color:var(--text);}
+.dos-param input:focus{outline:none;border-color:var(--red);}
+.dos-param span{font-size:12px;color:var(--text-muted);white-space:nowrap;}
+.dos-table{width:100%;border-collapse:collapse;font-size:14px;}
+.dos-table td{padding:12px 16px;border-bottom:1px solid var(--border);}
+.dos-table .col-lbl{color:var(--text);flex:1;}
+.dos-table .col-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);text-align:right;padding-bottom:6px;padding-top:0;}
+.dos-table .col-v{text-align:right;font-weight:700;font-size:14px;}
+.dos-table tfoot td{border-top:2px solid var(--border);border-bottom:none;background:var(--gray-bg);font-weight:700;}
+.dos-table tfoot .col-v{color:var(--red);font-size:15px;}
+.dos-facmin-card{background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:10px;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.dos-facmin-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray);}
+.dos-facmin-desc{font-size:12px;color:var(--text-muted);margin-top:4px;}
+.dos-facmin-val{text-align:right;}
+.dos-facmin-val .big{font-size:34px;font-weight:700;color:var(--red);line-height:1.1;}
+.dos-facmin-val .sub{font-size:12px;color:var(--text-muted);margin-top:3px;}
+.dos-coverage-bar-bg{background:var(--gray-bg);border-radius:4px;height:9px;overflow:hidden;margin:6px 0 14px;}
+.dos-coverage-bar-fill{height:100%;border-radius:4px;transition:width .4s;}
+.dos-alert{border-radius:8px;padding:13px 18px;}
+.dos-factura-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.dos-factura-row input{border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:14px;font-family:var(--font-main);width:220px;}
+.dos-factura-row input:focus{outline:none;border-color:var(--red);}
+.dos-link-btn{font-size:12px;padding:7px 14px;border-radius:7px;border:1px solid var(--border);background:white;color:var(--text);cursor:pointer;font-family:var(--font-main);white-space:nowrap;}
+.dos-link-btn:hover{background:var(--gray-bg);}
+.vtab-coming{text-align:center;padding:60px 20px;color:var(--text-muted);}
+.vtab-coming .icon{font-size:40px;margin-bottom:12px;}
+.vtab-coming h3{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--text);}
+
+/* ── SECTION NAV ── */
+.section-nav{display:flex;justify-content:flex-end;padding:12px 0 4px;margin-top:14px;border-top:1px solid var(--border);}
+.section-nav-btn{font-size:13px;font-weight:600;padding:8px 18px;border-radius:var(--r-btn);border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-family:var(--font-main);display:inline-flex;align-items:center;gap:6px;transition:all .15s;}
+.section-nav-btn:hover{background:var(--red);color:white;border-color:var(--red);}
+
+/* ── FOOTER ── */
+footer{background:var(--red);color:white;text-align:center;padding:12px;font-size:12px;opacity:.9;margin-top:auto;}
+
+@media(max-width:700px){.grid{grid-template-columns:1fr 1fr;}.prod-grid{grid-template-columns:1fr;}.metrics-row{grid-template-columns:1fr;}.escenarios{grid-template-columns:1fr;}.header-app{display:none;}}
+@media print{header .header-tabs{display:none;}footer{display:none;}.page{display:block!important;}.sec-body.collapsed{display:block!important;}button{display:none!important;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <img src="https://alura-reports-binz.vercel.app/Asset%2063@3x.png" alt="Alura"
+         onerror="this.style.display='none'">
+    <div class="sep"></div>
+    <div class="confidencial">
+      <div>USO CONFIDENCIAL</div>
+      <div>INTERNO ALURA</div>
+    </div>
+  </div>
+  <div class="header-title"><span>Calculadora de potencial solubles</span></div>
+  <div class="header-tabs">
+    <button class="tab-btn active" onclick="showTab('datos')">DATOS</button>
+    <button class="tab-btn" onclick="showTab('potencial')">POTENCIAL</button>
+    <!-- VALOR tab oculto temporalmente — descomentar para habilitar
+    <button class="tab-btn" onclick="showTab('pv')">VALOR</button>
+    -->
+    <button class="tab-btn" onclick="showTab('brecha')">CRECIMIENTO</button>
+  </div>
+</header>
+
+<!-- Sub-barra de acciones -->
+<div style="background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:8px 24px;">
+  <button class="btn-primary" onclick="exportarPDF()" style="font-size:12px;padding:7px 16px;">⬇ Exportar PDF</button>
+  <button class="btn-danger" onclick="reiniciar()" style="font-size:12px;padding:7px 16px;">↺ Reiniciar</button>
+</div>
+
+<div id="toast" class="toast"></div>
+<div id="validation-banner" style="display:none;background:#FEECEC;border-left:4px solid var(--danger-border);padding:10px 24px;font-size:13px;color:var(--danger-text);max-width:1300px;margin:10px auto 0;border-radius:0 8px 8px 0;"></div>
+
+<!-- ════════════════════════════════════════════════════
+     TAB 1 · DATOS (perfil + programa)
+════════════════════════════════════════════════════ -->
+<div class="page active" id="page-datos">
+  <div class="container">
+    <div class="page-title">
+      <h2>Datos del cliente y programa</h2>
+      <p>Perfil del cliente, portafolio soluble, premix y protocolo de medicación</p>
+    </div>
+
+    <!-- 1. Cliente -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSec('cliente')">
+        <span class="sec-title">1 · Datos del cliente</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="sec-badge" id="badge-cliente">—</span>
+          <span class="chevron" id="chev-cliente">▼</span>
+        </div>
+      </div>
+      <div class="sec-body collapsed" id="body-cliente">
+        <div class="grid">
+          <div class="field"><label>Productor / Cliente</label><input type="text" id="cliente-nombre" placeholder="Nombre del productor" oninput="actualizarBadgeCliente();saveState()"></div>
+          <div class="field"><label>Granja</label><input type="text" id="cliente-granja" placeholder="Nombre de la granja" oninput="saveState()"></div>
+          <div class="field"><label>Fecha</label><input type="date" id="cliente-fecha"></div>
+          <div class="field"><label>Etapa productiva</label>
+            <select id="etapa" onchange="calc();actualizarBadgeCliente()">
+              <option value="ceba">Ceba</option>
+              <option value="precebo">Precebo</option>
+              <option value="gestacion">Gestación</option>
+            </select>
+          </div>
+          <div class="field"><label>Animales por lote <span class="tip" data-tip="Total de animales en el lote que reciben tratamiento"></span></label><input type="number" id="animales" value="1000" min="100" step="100" oninput="calcD()"></div>
+          <div class="field"><label>Días tratamiento / sem <span class="tip" data-tip="Días por semana en que se medica en el agua (máx. 7). Afecta el consumo total del producto."></span></label><input type="number" id="dias" value="7" min="1" max="7" oninput="calcD()"></div>
+          <div class="field"><label>Lotes activos <span class="tip" data-tip="Número de lotes en producción simultánea en la granja"></span></label><input type="number" id="lotes" value="4" min="1" max="20" oninput="calcD()"></div>
+          <div class="field"><label>Sem. inicio <span class="tip" data-tip="Semana del ciclo productivo en que arranca el programa de medicación"></span></label><input type="number" id="sem-ini" value="11" min="1" max="52" oninput="actualizarSemanas();calc()"></div>
+          <div class="field"><label>Sem. fin <span class="tip" data-tip="Última semana del ciclo (ej: semana de sacrificio en ceba)"></span></label><input type="number" id="sem-fin" value="24" min="1" max="52" oninput="actualizarSemanas();calc()"></div>
+        </div>
+        <div class="section-nav"><button class="section-nav-btn" onclick="goNext('sol')">Medicación soluble →</button></div>
+      </div>
+    </div>
+
+    <!-- 2. Medicación soluble -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSec('sol')">
+        <span class="sec-title">2 · Medicación soluble</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="sec-badge" id="badge-sol">4 productos</span>
+          <span class="chevron" id="chev-sol">▼</span>
+        </div>
+      </div>
+      <div class="sec-body collapsed" id="body-sol">
+        <div class="prod-grid" id="prod-grid"></div>
+        <button class="add-btn" onclick="addProd()">+ Agregar producto</button>
+        <div class="section-nav"><button class="section-nav-btn" onclick="goNext('pre')">Premix →</button></div>
+      </div>
+    </div>
+
+    <!-- 3. Premix -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSec('pre')">
+        <span class="sec-title">3 · Medicación en alimento (premix)</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="sec-badge" id="badge-pre">4 moléculas</span>
+          <span class="chevron" id="chev-pre">▼</span>
+        </div>
+      </div>
+      <div class="sec-body collapsed" id="body-pre">
+        <p style="font-size:13px;color:var(--text-muted);padding-top:14px;margin-bottom:12px;">Indica en qué semanas del ciclo productivo el cliente usa cada antibiótico en el alimento.</p>
+        <div class="prod-grid" id="premix-grid"></div>
+        <button class="add-btn" onclick="addPremix()" style="border-color:#B5845A;color:#B5845A;">+ Agregar molécula</button>
+      </div>
+    </div>
+
+    <!-- 4. Cronograma de medicación -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSec('ciclo')">
+        <span class="sec-title">4 · Cronograma de medicación</span>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="sec-badge" id="badge-ciclo">sem 11–24</span>
+          <span id="chev-ciclo" class="chevron">▼</span>
+        </div>
+      </div>
+      <div class="sec-body collapsed" id="body-ciclo" style="padding-top:14px;padding-bottom:4px;">
+        <div style="overflow-x:auto;">
+          <table>
+            <thead id="thead"></thead>
+            <tbody id="tbody"></tbody>
+            <tfoot id="tfoot"></tfoot>
+          </table>
+        </div>
+        <div class="section-nav"><button class="section-nav-btn" onclick="goNext(null,'potencial')">Ver potencial →</button></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     TAB 3 · POTENCIAL
+════════════════════════════════════════════════════ -->
+<div class="page" id="page-potencial">
+  <div class="container">
+    <div class="page-title">
+      <h2 id="potencial-titulo">Potencial comercial</h2>
+      <p id="potencial-subtitulo">Configura el perfil y el programa para ver el análisis</p>
+    </div>
+
+    <!-- Aviso CTC -->
+    <div style="background:#FFF8E1;border:1px solid #F5A623;border-left:4px solid #F5A623;border-radius:0 8px 8px 0;padding:12px 18px;margin-bottom:20px;font-size:13px;color:#7A4F00;display:flex;align-items:flex-start;gap:10px;">
+      <span style="font-size:18px;line-height:1;">⚠</span>
+      <span><strong>Análisis teórico — requiere validación del CTC.</strong> Este potencial es una estimación basada en los datos ingresados. El programa de medicación debe ser revisado y aprobado por el CTC antes de ser presentado o recomendado al cliente.</span>
+    </div>
+
+    <!-- Tarjetas -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;">
+      <div class="metric">
+        <div class="metric-label">Potencial teórico por lote</div>
+        <div class="metric-value accent copyable" id="r-total" onclick="copyVal(this)" title="Clic para copiar">—</div>
+        <div class="metric-sub">ciclo completo · 100% adopción</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Potencial teórico total</div>
+        <div class="metric-value accent copyable" id="r-todos" onclick="copyVal(this)" title="Clic para copiar">—</div>
+        <div class="metric-sub" id="r-sub-todos">todos los lotes</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Potencial con adopción</div>
+        <div class="metric-value accent copyable" id="r-adoptado" onclick="copyVal(this)" title="Clic para copiar">—</div>
+        <div class="metric-sub">al <span id="pct-label">60</span>% de adopción</div>
+      </div>
+    </div>
+
+    <!-- Slider adopción -->
+    <div class="slider-box">
+      <div class="slider-label">
+        <span>Tasa de adopción estimada del programa</span>
+        <strong id="adopcion-pct">60%</strong>
+      </div>
+      <input type="range" id="slider-adopcion" min="0" max="100" value="60" oninput="actualizarAdopcion(this.value)">
+      <div style="position:relative;height:42px;margin-top:8px;">
+        <!-- tick lines -->
+        <div style="position:absolute;left:30%;width:1px;height:8px;background:var(--border);transform:translateX(-50%);top:0;"></div>
+        <div style="position:absolute;left:60%;width:1px;height:8px;background:var(--border);transform:translateX(-50%);top:0;"></div>
+        <div style="position:absolute;left:90%;width:1px;height:8px;background:var(--border);transform:translateX(-50%);top:0;"></div>
+        <!-- pct labels -->
+        <span style="position:absolute;left:30%;transform:translateX(-50%);top:10px;font-size:11px;font-weight:600;color:var(--text-muted);">30%</span>
+        <span style="position:absolute;left:60%;transform:translateX(-50%);top:10px;font-size:11px;font-weight:600;color:var(--text-muted);">60%</span>
+        <span style="position:absolute;left:90%;transform:translateX(-50%);top:10px;font-size:11px;font-weight:600;color:var(--text-muted);">90%</span>
+        <!-- scenario labels -->
+        <span style="position:absolute;left:30%;transform:translateX(-50%);top:26px;font-size:10px;color:var(--coral);font-weight:500;white-space:nowrap;">Pesimista</span>
+        <span style="position:absolute;left:60%;transform:translateX(-50%);top:26px;font-size:10px;color:var(--text-muted);font-weight:500;white-space:nowrap;">Neutra</span>
+        <span style="position:absolute;left:90%;transform:translateX(-50%);top:26px;font-size:10px;color:var(--green);font-weight:500;white-space:nowrap;">Optimista</span>
+      </div>
+    </div>
+
+    <!-- Resumen de caso -->
+    <div class="resumen-caso" id="resumen-caso"></div>
+
+    <!-- Distribución: pareto + mensual, siempre visibles, lado a lado -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+
+      <!-- Potencial por producto -->
+      <div class="section" style="margin-bottom:0;">
+        <div class="section-header" style="cursor:default;">
+          <span class="sec-title">Distribución del potencial por producto</span>
+        </div>
+        <div class="sec-body" id="body-pareto">
+          <div id="pareto-wrap" style="padding-top:8px;"></div>
+        </div>
+      </div>
+
+      <!-- Distribución mensual -->
+      <div class="section" style="margin-bottom:0;">
+        <div class="section-header" style="cursor:default;">
+          <span class="sec-title">Distribución potencial por mes</span>
+        </div>
+        <div class="sec-body" id="body-chart">
+          <div id="chart-legend" style="display:flex;flex-wrap:wrap;gap:8px;padding-top:8px;margin-bottom:10px;"></div>
+          <div style="position:relative;height:260px;">
+            <canvas id="chart"></canvas>
+            <div id="chart-err" style="display:none;align-items:center;justify-content:center;height:160px;color:var(--text-muted);font-size:13px;flex-direction:column;gap:6px;">
+              <span style="font-size:24px;">📊</span>
+              <span>Gráfica no disponible — verifica la conexión a internet.</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label style="font-size:12px;color:var(--text-muted);font-weight:600;">Fecha entrada primer lote:</label>
+              <input type="date" id="fecha-inicio" oninput="calc()"
+                style="border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:var(--font-main);">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label style="font-size:12px;color:var(--text-muted);font-weight:600;">Intervalo entre lotes (días):</label>
+              <input type="number" id="desplazamiento" value="21" min="1" max="98" oninput="calc()"
+                style="width:60px;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:var(--font-main);">
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══ PANEL DE CRECIMIENTO PAGE ═══════════════════════════════════════════════ -->
+<div class="page" id="page-brecha">
+  <div class="container" style="padding-top:20px;">
+    <div class="page-title">
+      <h2>Panel de crecimiento</h2>
+      <p>Palancas accionables para cerrar la brecha de la meta.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <span style="font-size:12px;color:var(--text-muted);font-weight:700;">Meta de crecimiento:</span>
+      <input type="number" id="meta-crec" value="22" min="1" max="200" step="1"
+        style="width:70px;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;font-family:var(--font-main);"
+        oninput="calc()">
+      <span style="font-size:12px;color:var(--text-muted);">%</span>
+    </div>
+    <div id="brecha-panel"></div>
+  </div>
+</div>
+
+
+<!-- ══ PROPUESTA DE VALOR PAGE ══════════════════════════════════════════════════ -->
+<div class="page" id="page-pv">
+  <div class="container">
+
+    <div class="page-title">
+      <h2>Costo de servir</h2>
+      <p>Evalúa la rentabilidad de cada elemento de la propuesta de valor — dosificador, diagnóstico, visitas y más.</p>
+    </div>
+
+    <!-- Sub-navegación -->
+    <div class="vtabs">
+      <button class="vtab-btn active" data-vtab="dosificador" onclick="showVtab('dosificador')">Dosificador móvil</button>
+      <button class="vtab-btn" data-vtab="diagnostico" onclick="showVtab('diagnostico')">Diagnóstico</button>
+      <button class="vtab-btn" data-vtab="visitas" onclick="showVtab('visitas')">Visitas de campo</button>
+      <button class="vtab-btn" data-vtab="academy" onclick="showVtab('academy')">Alura Academy</button>
+      <button class="vtab-btn" data-vtab="health" onclick="showVtab('health')">Alura Health</button>
+    </div>
+
+    <!-- ─── Dosificador móvil ─────────────────────────────────────── -->
+    <div class="vtab-pane active" id="vtab-dosificador">
+
+      <!-- Parámetros -->
+      <div class="section" style="margin-bottom:14px;">
+        <div class="section-header" style="cursor:default;">
+          <span class="sec-title">PARÁMETROS DEL DOSIFICADOR</span>
+        </div>
+        <div style="padding:20px 22px;">
+          <div class="dos-params" style="grid-template-columns:repeat(4,1fr);">
+            <div class="dos-param">
+              <label>Inversión inicial</label>
+              <div class="dos-param-inner">
+                <input type="number" id="dos-inv" value="15000000" step="500000" oninput="calcDos()">
+                <span>COP</span>
+              </div>
+            </div>
+            <div class="dos-param">
+              <label>Mantenimiento mensual</label>
+              <div class="dos-param-inner">
+                <input type="number" id="dos-mant" value="700000" step="50000" oninput="calcDos()">
+                <span>COP/mes</span>
+              </div>
+            </div>
+            <div class="dos-param">
+              <label>Tasa de costo de capital <span class="tip" data-tip="Costo de oportunidad del capital invertido en el equipo. Normalmente 10-20% anual."></span></label>
+              <div class="dos-param-inner">
+                <input type="number" id="dos-tasa" value="15" min="0" max="100" step="1" oninput="calcDos()">
+                <span>% anual</span>
+              </div>
+            </div>
+            <div class="dos-param">
+              <label>Años a depreciar <span class="tip" data-tip="Vida útil estimada del dosificador. Determina la cuota de depreciación mensual."></span></label>
+              <div class="dos-param-inner">
+                <input type="number" id="dos-anos" value="5" min="1" max="20" step="1" oninput="calcDos()">
+                <span>años</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desglose de costos -->
+      <div class="section" style="margin-bottom:14px;">
+        <div class="section-header" style="cursor:default;">
+          <span class="sec-title">DESGLOSE DE COSTOS</span>
+        </div>
+        <div style="padding:6px 0 6px;">
+          <div id="dos-desglose"></div>
+        </div>
+      </div>
+
+      <!-- Impacto en margen -->
+      <div id="dos-impacto" style="margin-bottom:18px;"></div>
+
+      <!-- Facturación base -->
+      <div class="section" style="margin-bottom:14px;">
+        <div class="section-header" style="cursor:default;">
+          <span class="sec-title">FACTURACIÓN MENSUAL BASE DEL CLIENTE</span>
+          <span style="font-size:11px;color:var(--green);font-weight:400;">🔗 Vinculada al simulador</span>
+        </div>
+        <div style="padding:16px 22px;display:flex;align-items:center;gap:14px;">
+          <input type="number" id="dos-fac" value="0" step="50000" oninput="calcDos()"
+            style="border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:15px;font-family:var(--font-main);width:240px;">
+          <span style="font-size:13px;color:var(--text-muted);">COP / mes</span>
+          <button class="dos-link-btn" onclick="usarPotencialDos()" style="padding:8px 16px;font-size:13px;">← Traer del simulador</button>
+          <span id="dos-fac-display" style="font-size:12px;color:var(--text-muted);font-style:italic;"></span>
+        </div>
+      </div>
+
+      <!-- Análisis de recuperación -->
+      <div id="dos-recovery"></div>
+
+    </div><!-- /vtab-dosificador -->
+
+    <!-- ─── Coming soon panes ─────────────────────────────────────── -->
+    <div class="vtab-pane" id="vtab-diagnostico">
+      <div class="vtab-coming"><div class="icon">🔬</div><h3>Diagnóstico</h3><p>Próximamente: evaluación de rentabilidad del servicio de diagnóstico.</p></div>
+    </div>
+    <div class="vtab-pane" id="vtab-visitas">
+      <div class="vtab-coming"><div class="icon">🚗</div><h3>Visitas de campo</h3><p>Próximamente: evaluación de rentabilidad de visitas técnicas.</p></div>
+    </div>
+    <div class="vtab-pane" id="vtab-academy">
+      <div class="vtab-coming"><div class="icon">🎓</div><h3>Alura Academy</h3><p>Próximamente: evaluación de rentabilidad del programa de formación.</p></div>
+    </div>
+    <div class="vtab-pane" id="vtab-health">
+      <div class="vtab-coming"><div class="icon">🖥️</div><h3>Alura Health</h3><p>Próximamente: evaluación de rentabilidad de la plataforma de salud.</p></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ LANDING / AUTH ══════════════════════════════════════════════════════════ -->
+<div id="landing" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--red);z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:16px;padding:48px 40px;width:380px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.35);">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:#8B8B8D;margin-bottom:20px;">Alura Business · Confidencial · Uso interno</div>
+    <div style="font-size:26px;font-weight:700;color:var(--red);margin-bottom:36px;">Calculadora de potencial solubles</div>
+    <input type="password" id="pwd-input" placeholder="Contraseña de acceso"
+      style="width:100%;border:1.5px solid #E0E0E0;border-radius:8px;padding:12px 16px;font-size:15px;font-family:var(--font-main);margin-bottom:12px;box-sizing:border-box;outline:none;"
+      onkeydown="if(event.key==='Enter')checkPwd()"
+      onfocus="this.style.borderColor='var(--red)'"
+      onblur="this.style.borderColor='#E0E0E0'">
+    <div id="pwd-error" style="display:none;font-size:12px;color:var(--red);margin-bottom:10px;">Contraseña incorrecta. Intenta de nuevo.</div>
+    <button onclick="checkPwd()"
+      style="width:100%;background:var(--red);color:white;border:none;border-radius:8px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font-main);letter-spacing:.04em;">
+      Ingresar
+    </button>
+  </div>
+</div>
+
+<footer>Solubles Alura · Iluma Alliance · Uso interno y confidencial Alura · V1</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"
+  onerror="document.getElementById('chart-err').style.display='flex'"></script>
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// MATRIZ DE INTERACCIONES
+// ══════════════════════════════════════════════════════════════════════════════
+const CLASES = ['PEN','CEF','AMG','QUI','FEN','MAC','TET','SUL','TRI'];
+const CLASE_LABEL = {PEN:'Penicilinas',CEF:'Cefalosporinas',AMG:'Aminoglucósidos',QUI:'Quinolonas',FEN:'Fenicoles',MAC:'Macrólidos',TET:'Tetraciclinas',SUL:'Sulfonamidas',TRI:'Trimetoprim'};
+const INTER = {
+  PEN:{CEF:'S',AMG:'S',QUI:'A',FEN:'X',MAC:'X',TET:'X',SUL:'X',TRI:'X'},
+  CEF:{PEN:'S',AMG:'S',QUI:'A',FEN:'X',MAC:'X',TET:'X',SUL:'X',TRI:'X'},
+  AMG:{PEN:'S',CEF:'S',QUI:'',FEN:'X',MAC:'X',TET:'X',SUL:'X',TRI:'X'},
+  QUI:{PEN:'A',CEF:'A',AMG:'',FEN:'X',MAC:'X',TET:'X',SUL:'A',TRI:'A'},
+  FEN:{PEN:'X',CEF:'X',AMG:'X',QUI:'X',MAC:'A',TET:'A',SUL:'A',TRI:'A'},
+  MAC:{PEN:'X',CEF:'X',AMG:'X',QUI:'X',FEN:'A',TET:'X',SUL:'A',TRI:'A'},
+  TET:{PEN:'X',CEF:'X',AMG:'X',QUI:'X',FEN:'A',MAC:'X',SUL:'A',TRI:'A'},
+  SUL:{PEN:'X',CEF:'X',AMG:'X',QUI:'A',FEN:'A',MAC:'A',TET:'A',TRI:'S'},
+  TRI:{PEN:'X',CEF:'X',AMG:'X',QUI:'A',FEN:'A',MAC:'A',TET:'A',SUL:'S'},
+};
+function getInteraccion(c1,c2){
+  if(!c1||!c2||c1===c2) return null;
+  return INTER[c1]?.[c2]||INTER[c2]?.[c1]||null;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DATOS
+// ══════════════════════════════════════════════════════════════════════════════
+const PESOS_BASE={};
+(function(){
+  const k={11:35.5,12:41.5,13:47.9,14:54.6,15:61.6,16:68.9,17:76.4,18:84.2,19:92.1,20:100.2,21:108.4,22:116.7,23:125,24:133.3};
+  for(let s=1;s<=52;s++) PESOS_BASE[s]=k[s]??(35.5+(s-11)*8).toFixed(1)*1;
+})();
+
+let SEMANAS_ACTIVAS=[];
+let NUMS_SEM_ACTIVOS=[];
+
+function actualizarSemanas(){
+  const ini=+document.getElementById('sem-ini').value||11;
+  const fin=+document.getElementById('sem-fin').value||24;
+  const a=Math.min(ini,fin), b=Math.max(ini,fin);
+  SEMANAS_ACTIVAS=[];
+  for(let s=a;s<=b;s++) SEMANAS_ACTIVAS.push({sem:s,peso:PESOS_BASE[s]||0});
+  NUMS_SEM_ACTIVOS=SEMANAS_ACTIVAS.map(s=>s.sem);
+  const n=SEMANAS_ACTIVAS.length;
+  document.getElementById('badge-ciclo').textContent=`${n} sem · ${a}–${b}`;
+  renderPremix();
+}
+
+const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const LOTE_COLORS=['#7C2D2D','#2A6B45','#1D9E75','#345342','#C0453A','#4A7F60','#B5845A','#6B4F8C'];
+
+// retiro = días de tiempo de retiro antes de sacrificio
+const RETIRO_CLASE={MAC:14,SUL:10,FEN:28,TET:3,PEN:1,AMG:28,QUI:7,CEF:3};
+function getRetiro(p){ return p.retiro!=null ? p.retiro : (RETIRO_CLASE[p.clase]||0); }
+
+// Factory functions → fresh Set instances cada vez
+const DEFAULT_PRODS = () => [
+  {nombre:'Dinamix 600',  dosis:7,  conc:60,  precio:170000, tipo:'mg_kg', clase:'MAC', activas:new Set([11,15,19])},
+  {nombre:'Trimbac 75',   dosis:25, conc:75,  precio:150000, tipo:'mg_kg', clase:'SUL', activas:new Set([11])},
+  {nombre:'Fractal L',    dosis:1,  conc:100, precio:39000,  tipo:'ml_l',  clase:'',   activas:new Set()},
+  {nombre:'Feniflor Oral',dosis:15, conc:20,  precio:105000, tipo:'mg_kg', clase:'FEN', activas:new Set([15,19])},
+];
+const DEFAULT_PREMIX = () => [
+  {nombre:'Tilmicosina',      clase:'MAC', activas:new Set([11,12])},
+  {nombre:'Clortetraciclina', clase:'TET', activas:new Set([11,12])},
+  {nombre:'Florfenicol',      clase:'FEN', activas:new Set([17,18])},
+  {nombre:'Halquinol',        clase:'QUI', activas:new Set([17,18])},
+];
+let prods      = DEFAULT_PRODS();
+let premixMols = DEFAULT_PREMIX();
+
+let chartInst=null;
+let adopcionPct=60;
+let lotesOcultos=new Set();
+// Cache para re-render al cambiar adopción
+let _totProd=[];
+let _nLotes=1;
+let _totGlobal=0;
+let _dosImpactoPct=0; // % de facturación consumido por dosificador
+let _chartMonthData=[];
+let _chartLoteData={}; // per-lote monthly data for PDF stacked chart
+
+// ══════════════════════════════════════════════════════════════════════════════
+// UTILIDADES
+// ══════════════════════════════════════════════════════════════════════════════
+const _intlAbbr = new Intl.NumberFormat('es-CO',{maximumFractionDigits:0});
+function fmtM(n){
+  if(n==null||isNaN(n)||n===0) return '—';
+  if(n>=1000000) return '$ '+(n/1000000).toLocaleString('es-CO',{minimumFractionDigits:1,maximumFractionDigits:1})+'M';
+  if(n>=1000)    return '$ '+_intlAbbr.format(Math.round(n/1000))+'k';
+  return '$ '+_intlAbbr.format(Math.round(n));
+}
+
+function calcKg(p,animales,peso,dias){
+  if(!p.dosis) return 0;
+  if(p.tipo==='ml_l') return (animales*peso*0.12*p.dosis/1000)*dias;
+  if(!p.conc) return 0;
+  return (p.dosis*peso*animales/(p.conc/100*1000000))*dias;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// NAVEGACIÓN
+// ══════════════════════════════════════════════════════════════════════════════
+function showTab(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelector(`[onclick="showTab('${name}')"]`).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(name==='pv') usarPotencialDos(true);
+  if(name==='brecha') renderBrecha(_totGlobal*_nLotes*adopcionPct/100);
+}
+
+function goNext(nextId, nextTab){
+  if(nextId){
+    const b=document.getElementById('body-'+nextId);
+    const c=document.getElementById('chev-'+nextId);
+    if(b && b.classList.contains('collapsed')){
+      b.classList.remove('collapsed');
+      if(c) c.classList.add('open');
+    }
+    const sec = b && b.closest ? b.closest('.section') : null;
+    if(sec) setTimeout(()=>sec.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  } else if(nextTab){
+    showTab(nextTab);
+  }
+}
+
+function actualizarBadgeCliente(){
+  const nombre = (document.getElementById('cliente-nombre')||{}).value||'';
+  const etapaEl = document.getElementById('etapa');
+  const etapaLabel = {ceba:'Ceba',precebo:'Precebo',gestacion:'Gestación'}[(etapaEl||{}).value]||'';
+  const badge = document.getElementById('badge-cliente');
+  if(!badge) return;
+  if(nombre && etapaLabel) badge.textContent = nombre + ' · ' + etapaLabel;
+  else if(nombre) badge.textContent = nombre;
+  else if(etapaLabel) badge.textContent = etapaLabel;
+  else badge.textContent = '—';
+}
+
+function toggleSec(id){
+  const body=document.getElementById('body-'+id);
+  const chev=document.getElementById('chev-'+id);
+  if(!body) return;
+  const col=body.classList.toggle('collapsed');
+  if(chev) chev.classList.toggle('open',!col);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RENDER PRODUCTOS
+// ══════════════════════════════════════════════════════════════════════════════
+function renderProds(){
+  const c=document.getElementById('prod-grid');
+  c.innerHTML='';
+  prods.forEach((p,i)=>{
+    const d=document.createElement('div');
+    d.className='prod-card';
+    d.style.borderLeft='3px solid var(--red)';
+    d.innerHTML=`
+      <button class="del-btn" onclick="delProd(${i})">×</button>
+      <input class="prod-name" value="${p.nombre}" oninput="prods[${i}].nombre=this.value;renderAll()">
+      <div class="prod-inputs">
+        <div><label>${p.tipo==='ml_l'?'Dosis ml/L':'Dosis mg/kg'}</label>
+          <input type="number" value="${p.dosis}" min="0" step="${p.tipo==='ml_l'?0.1:1}"
+            oninput="prods[${i}].dosis=+this.value;calcD()"></div>
+        ${p.tipo==='ml_l'
+          ?'<div style="opacity:.35"><label>Conc. %</label><input type="number" value="100" disabled></div>'
+          :`<div><label>Conc. %</label><input type="number" value="${p.conc}" min="0" max="100" step=".5"
+              oninput="prods[${i}].conc=+this.value;calcD()"></div>`}
+        <div><label>Precio $/kg</label><input type="number" value="${p.precio}" min="0" step="1000"
+          oninput="prods[${i}].precio=+this.value;calcD()"></div>
+      </div>
+      <div class="prod-class-row">
+        <label>Clase:</label>
+        <select onchange="prods[${i}].clase=this.value;renderAll()">
+          <option value="">— sin clase —</option>
+          ${CLASES.map(cl=>`<option value="${cl}" ${p.clase===cl?'selected':''}>${CLASE_LABEL[cl]}</option>`).join('')}
+        </select>
+      </div>
+      ${p.tipo==='ml_l'?'<p style="font-size:11px;color:var(--text-muted);margin-top:8px;">Tipo: ml/L agua</p>':''}`;
+    c.appendChild(d);
+  });
+  document.getElementById('badge-sol').textContent=prods.length+' producto'+(prods.length!==1?'s':'');
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RENDER PREMIX
+// ══════════════════════════════════════════════════════════════════════════════
+function renderPremix(){
+  const c=document.getElementById('premix-grid');
+  c.innerHTML='';
+  premixMols.forEach((m,i)=>{
+    const d=document.createElement('div');
+    d.className='premix-card';
+    const semsHtml=NUMS_SEM_ACTIVOS.map(s=>
+      `<button class="sem-btn ${m.activas.has(s)?'active':''}" onclick="togglePremixSem(${i},${s})">${s}</button>`
+    ).join('');
+    d.innerHTML=`
+      <button class="del-btn" onclick="delPremix(${i})">×</button>
+      <input class="prod-name" value="${m.nombre}" oninput="premixMols[${i}].nombre=this.value" style="color:#7A4F00;">
+      <div class="prod-class-row" style="margin-bottom:8px;">
+        <label>Clase:</label>
+        <select onchange="premixMols[${i}].clase=this.value;renderAll()">
+          <option value="">— sin clase —</option>
+          ${CLASES.map(cl=>`<option value="${cl}" ${m.clase===cl?'selected':''}>${CLASE_LABEL[cl]}</option>`).join('')}
+        </select>
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:4px;">Semanas activas:</p>
+      <div class="premix-sems">${semsHtml}</div>`;
+    c.appendChild(d);
+  });
+  document.getElementById('badge-pre').textContent=premixMols.length+' molécula'+(premixMols.length!==1?'s':'');
+}
+
+function togglePremixSem(i,s){
+  if(premixMols[i].activas.has(s)) premixMols[i].activas.delete(s);
+  else premixMols[i].activas.add(s);
+  renderPremix(); renderAll();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INTERACCIONES
+// ══════════════════════════════════════════════════════════════════════════════
+function calcInteracciones(){
+  const semInfo={};
+  SEMANAS_ACTIVAS.forEach(s=>{
+    const todas=[
+      ...prods.filter(p=>p.activas.has(s.sem)&&p.clase).map(p=>({nombre:p.nombre,clase:p.clase})),
+      ...premixMols.filter(m=>m.activas.has(s.sem)&&m.clase).map(m=>({nombre:m.nombre,clase:m.clase})),
+    ];
+    const pares=[];
+    for(let i=0;i<todas.length;i++)
+      for(let j=i+1;j<todas.length;j++){
+        const r=getInteraccion(todas[i].clase,todas[j].clase);
+        if(r) pares.push({r,a:todas[i].nombre,b:todas[j].nombre});
+      }
+    if(pares.length){
+      const nivel=pares.find(p=>p.r==='X')?'X':pares.find(p=>p.r==='A')?'A':'S';
+      semInfo[s.sem]={nivel,pares};
+    }
+  });
+  return semInfo;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RENDER TABLA
+// ══════════════════════════════════════════════════════════════════════════════
+function renderTabla(semInfo){
+  const animales=+document.getElementById('animales').value||1000;
+  const dias=+document.getElementById('dias').value||7;
+
+  let thHtml='<tr><th>Sem</th><th>Peso prom.<br>kg</th>';
+  prods.forEach(p=>{ thHtml+=`<th>${p.nombre.split(' ')[0]}</th>`; });
+  thHtml+='<th>Total</th><th>Interacciones</th></tr>';
+  document.getElementById('thead').innerHTML=thHtml;
+
+  const totProd=prods.map(()=>0);
+  let totGlobal=0;
+  let tbodyHtml='';
+
+  SEMANAS_ACTIVAS.forEach(s=>{
+    let rowTotal=0, hayAlgo=false, cols='';
+    prods.forEach((p,i)=>{
+      const activa=p.activas.has(s.sem);
+      if(activa) hayAlgo=true;
+      const kg=activa?calcKg(p,animales,s.peso,dias):0;
+      const val=activa?kg*p.precio:0;
+      if(activa){rowTotal+=val;totProd[i]+=val;}
+      cols+=`<td class="ck" onclick="toggleCheck(${i},${s.sem},!prods[${i}].activas.has(${s.sem}))">
+        <div class="ck-wrap">
+          <input type="checkbox" ${activa?'checked':''}>
+          ${activa?`<span class="ck-val">${fmtM(val)}</span>`:''}
+        </div></td>`;
+    });
+    totGlobal+=rowTotal;
+
+    const hasPremix=premixMols.some(m=>m.activas.has(s.sem));
+    const premixPill=hasPremix?'<span class="pill pill-p">P</span>':'';
+
+    let interTd='<td style="text-align:center;font-size:11px;color:#ccc;">—</td>';
+    const info=semInfo[s.sem];
+    if(info){
+      const bg=info.nivel==='X'?'#FEECEC':info.nivel==='A'?'#FFF8E1':'#E8F5E9';
+      const col=info.nivel==='X'?'var(--danger-text)':info.nivel==='A'?'#7A4F00':'#1B5E20';
+      const label=info.nivel==='X'?'Antagonismo':info.nivel==='A'?'Aditivo':'Sinérgico';
+      const tip=info.pares.map(p=>`${p.a} + ${p.b}`).join(' | ');
+      interTd=`<td style="text-align:center;background:${bg};font-size:11px;font-weight:700;color:${col};padding:5px 8px;" title="${tip}">${label}</td>`;
+    }
+
+    tbodyHtml+=`<tr class="${hayAlgo?'':'inactive'}">
+      <td>${s.sem}${premixPill}</td>
+      <td>${s.peso}</td>${cols}
+      <td class="amt">${rowTotal>0?fmtM(rowTotal):'—'}</td>
+      ${interTd}
+    </tr>`;
+  });
+
+  document.getElementById('tbody').innerHTML=tbodyHtml;
+
+  let tfHtml='<tr><td colspan="2" style="text-align:left;">Total ciclo</td>';
+  totProd.forEach(t=>{ tfHtml+=`<td>${fmtM(t)}</td>`; });
+  tfHtml+=`<td class="grand">${fmtM(totGlobal)}</td><td></td></tr>`;
+  document.getElementById('tfoot').innerHTML=tfHtml;
+
+  const nL=+document.getElementById('lotes').value||1;
+  document.getElementById('r-total').textContent=fmtM(totGlobal);
+  document.getElementById('r-todos').textContent=fmtM(totGlobal*nL);
+  document.getElementById('r-sub-todos').textContent=nL+' lote'+(nL!==1?'s':'')+' activos';
+
+  _totProd=[...totProd];
+  _nLotes=nL;
+  _totGlobal=totGlobal;
+  renderPareto(totProd,nL);
+  actualizarEscenarios(totGlobal*nL);
+  actualizarResumen(totGlobal*nL);
+  renderBrecha(totGlobal*nL*adopcionPct/100);
+
+  actualizarBadgeCliente(); // sync badge with current client/etapa
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PARETO
+// ══════════════════════════════════════════════════════════════════════════════
+function renderPareto(totProd,nLotes){
+  const wrap=document.getElementById('pareto-wrap');
+  if(!wrap) return;
+  const datos=prods.map((p,i)=>({nombre:p.nombre,val:totProd[i]*nLotes*adopcionPct/100}))
+    .filter(d=>d.val>0).sort((a,b)=>b.val-a.val);
+  if(!datos.length){wrap.innerHTML='<p style="font-size:13px;color:var(--text-muted);">Activa productos en el programa para ver el análisis.</p>';return;}
+  const max=datos[0].val, total=datos.reduce((s,d)=>s+d.val,0);
+  wrap.innerHTML=datos.map(d=>{
+    const pct=total>0?Math.round(d.val/total*100):0;
+    const w=max>0?Math.round(d.val/max*100):0;
+    return `<div class="pareto-row">
+      <div class="pareto-name">${d.nombre}</div>
+      <div class="pareto-bg"><div class="pareto-fill" style="width:${w}%"></div></div>
+      <div class="pareto-pct">${pct}%</div>
+      <div class="pareto-val">${fmtM(d.val)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GRÁFICA
+// ══════════════════════════════════════════════════════════════════════════════
+function renderChart(){
+  const animales=+document.getElementById('animales').value||1000;
+  const dias=+document.getElementById('dias').value||7;
+  const nLotes=+document.getElementById('lotes').value||1;
+  const despDias=+document.getElementById('desplazamiento').value||21;
+  const fechaStr=document.getElementById('fecha-inicio').value||new Date().toISOString().split('T')[0];
+  const fechaBase=new Date(fechaStr+'T00:00:00');
+
+  const ventasMesPorLote=Array.from({length:nLotes},()=>Array(12).fill(0));
+  for(let l=0;l<nLotes;l++){
+    SEMANAS_ACTIVAS.forEach((s,idx)=>{
+      let rowTotal=0;
+      prods.forEach(p=>{ if(p.activas.has(s.sem)) rowTotal+=calcKg(p,animales,s.peso,dias)*p.precio; });
+      if(rowTotal>0){
+        const fechaSem=new Date(fechaBase.getTime()+(idx*7+l*despDias)*86400000);
+        ventasMesPorLote[l][fechaSem.getMonth()]+=rowTotal;
+      }
+    });
+  }
+
+  // Leyenda interactiva
+  const legend=document.getElementById('chart-legend');
+  legend.innerHTML='';
+  for(let l=0;l<nLotes;l++){
+    const fechaL=new Date(fechaBase.getTime()+l*despDias*86400000);
+    const color=LOTE_COLORS[l%LOTE_COLORS.length];
+    const isH=lotesOcultos.has(l);
+    const btn=document.createElement('button');
+    btn.style.cssText=`display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:4px 12px;border-radius:12px;border:1px solid ${color};font-family:var(--font-main);background:${isH?'white':color+'22'};color:${isH?'#aaa':'#333'};text-decoration:${isH?'line-through':'none'};`;
+    btn.innerHTML=`<span style="width:10px;height:10px;border-radius:2px;background:${isH?'#ccc':color};display:inline-block;"></span>Lote ${l+1} · ${fechaL.toLocaleDateString('es-CO',{day:'2-digit',month:'short'})}`;
+    btn.onclick=()=>{lotesOcultos.has(l)?lotesOcultos.delete(l):lotesOcultos.add(l);renderChart();};
+    legend.appendChild(btn);
+  }
+
+  // Store per-lote monthly data for PDF stacked chart
+  const MESES_SHORT=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  _chartLoteData={
+    labels:MESES_SHORT,
+    series:ventasMesPorLote.map((data,l)=>({
+      color:LOTE_COLORS[l%LOTE_COLORS.length],
+      label:`Lote ${l+1}`,
+      hidden:lotesOcultos.has(l),
+      data:data.map(v=>+(v/1e6*adopcionPct/100).toFixed(3))
+    }))
+  };
+  // Totals for backward compat
+  const monthTotals=Array(12).fill(0);
+  ventasMesPorLote.forEach((loteData,l)=>{
+    if(lotesOcultos.has(l)) return;
+    loteData.forEach((v,m)=>{ monthTotals[m]+=v/1000000*adopcionPct/100; });
+  });
+  _chartMonthData=MESES_SHORT.map((label,i)=>({label,val:+monthTotals[i].toFixed(2)})).filter(d=>d.val>0);
+
+  const datasets=ventasMesPorLote
+    .map((data,l)=>({
+      label:`Lote ${l+1}`,
+      data:data.map(v=>+(v/1000000*adopcionPct/100).toFixed(2)),
+      backgroundColor:LOTE_COLORS[l%LOTE_COLORS.length]+'CC',
+      borderColor:LOTE_COLORS[l%LOTE_COLORS.length],
+      borderWidth:1,borderRadius:3,
+    }))
+    .filter((_,l)=>!lotesOcultos.has(l));
+
+  const ctx=document.getElementById('chart').getContext('2d');
+  if(chartInst) chartInst.destroy();
+  chartInst=new Chart(ctx,{
+    type:'bar',
+    data:{labels:MESES,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        label:c=>` ${c.dataset.label}: $${c.parsed.y}M`,
+        footer:items=>`Total mes: $${items.reduce((a,i)=>a+i.parsed.y,0).toFixed(2)}M`
+      }}},
+      scales:{
+        x:{stacked:true,grid:{display:false},ticks:{font:{family:'Calibri',size:12}}},
+        y:{stacked:true,grid:{color:'#E0E0E0'},ticks:{font:{family:'Calibri',size:12},callback:v=>'$'+v+'M'}}
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ADOPCIÓN
+// ══════════════════════════════════════════════════════════════════════════════
+function actualizarAdopcion(val){
+  adopcionPct=+val;
+  const slider=document.getElementById('slider-adopcion');
+  slider.style.background=`linear-gradient(to right,var(--red) 0%,var(--red) ${val}%,var(--border) ${val}%)`;
+  document.getElementById('adopcion-pct').textContent=val+'%';
+  document.getElementById('pct-label').textContent=val;
+  document.getElementById('r-adoptado').textContent=fmtM(_totGlobal*_nLotes*adopcionPct/100);
+  // Re-render adoption-based charts
+  renderPareto(_totProd,_nLotes);
+  renderChart();
+  renderBrecha(_totGlobal*_nLotes*adopcionPct/100);
+}
+function setAdopcion(val){document.getElementById('slider-adopcion').value=val;actualizarAdopcion(val);}
+
+function actualizarEscenarios(totalBarras){
+  document.getElementById('r-adoptado').textContent=fmtM(totalBarras*adopcionPct/100);
+  const slider=document.getElementById('slider-adopcion');
+  slider.style.background=`linear-gradient(to right,var(--red) 0%,var(--red) ${adopcionPct}%,var(--border) ${adopcionPct}%)`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RESUMEN DE CASO
+// ══════════════════════════════════════════════════════════════════════════════
+function actualizarResumen(totalBarras){
+  const nLotes=+document.getElementById('lotes').value||1;
+  const animales=+document.getElementById('animales').value||1000;
+  const etapa={ceba:'ceba',precebo:'precebo',gestacion:'gestación'}[document.getElementById('etapa').value]||'ceba';
+  const el=document.getElementById('resumen-caso');
+  const titulo=document.getElementById('potencial-titulo');
+  const subtitulo=document.getElementById('potencial-subtitulo');
+  if(titulo) titulo.textContent='Potencial comercial';
+  if(subtitulo) subtitulo.textContent=`${nLotes} lote${nLotes!==1?'s':''} · ${animales.toLocaleString('es-CO')} animales · ${etapa}`;
+  if(!el) return;
+  if(totalBarras===0){el.innerHTML='<em style="color:var(--text-muted);">Activa productos en el programa de medicación para ver el resumen.</em>';return;}
+  el.innerHTML=`Para el cliente, con <strong>${nLotes} lote${nLotes!==1?'s':''} activo${nLotes!==1?'s':''}</strong> de <strong>${animales.toLocaleString('es-CO')} animales</strong> en <strong>${etapa}</strong>, el potencial teórico de solubles Alura es de <strong style="color:var(--red);">$${(totalBarras/1000000).toFixed(1)}M</strong> en total, distribuido así:`;
+}
+function actualizarResumenRapido(){
+  const t=parseFloat((document.getElementById('r-todos').textContent||'0').replace(/[^0-9.]/g,''))||0;
+  actualizarResumen(t*1000000);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PANEL BRECHA +22%
+// ══════════════════════════════════════════════════════════════════════════════
+function renderBrecha(totalBarras){
+  const el=document.getElementById('brecha-panel');
+  if(!el||totalBarras===0){if(el)el.innerHTML='<p style="font-size:13px;color:var(--text-muted);">Configura el programa para ver las palancas de crecimiento.</p>';return;}
+  const animales=+document.getElementById('animales').value||1000;
+  const dias=+document.getElementById('dias').value||7;
+  const nLotes=+document.getElementById('lotes').value||1;
+  const metaPct=(+( document.getElementById('meta-crec')||{value:22} ).value)||22;
+  const objetivo=totalBarras*(1+metaPct/100);
+  const brecha=objetivo-totalBarras;
+
+  const palancas=[];
+  const semFin=+document.getElementById('sem-fin').value||24;
+  // por producto — respetar tiempo de retiro, semanas de mayor valor primero
+  prods.forEach(p=>{
+    const retiroDias=getRetiro(p);
+    // sólo semanas con suficiente distancia al sacrificio
+    const semsInact=SEMANAS_ACTIVAS.filter(s=>
+      !p.activas.has(s.sem) &&
+      (semFin - s.sem)*7 >= retiroDias
+    );
+    if(!semsInact.length) return;
+    const semsConVal=semsInact
+      .map(s=>({sem:s.sem,val:calcKg(p,animales,s.peso,dias)*p.precio*nLotes*adopcionPct/100}))
+      .filter(sv=>sv.val>0)
+      .sort((a,b)=>b.val-a.val);
+    let extra=0;
+    const semsSel=[];
+    for(const sv of semsConVal){
+      if(extra>=brecha) break;
+      extra+=sv.val;
+      semsSel.push(sv.sem);
+    }
+    if(extra>0) palancas.push({
+      label:`${p.nombre}`,
+      semanas:semsSel,
+      impacto:Math.min(extra,brecha),  // for sorting
+      valTotal:extra,                   // real uncapped total
+      impactoXLote:extra/nLotes,        // real per lote
+      tipo:'prod'
+    });
+  });
+  palancas.sort((a,b)=>b.impacto-a.impacto);
+  const top5=palancas.slice(0,5);
+
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+      <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Potencial con adopción</div>
+        <div style="font-size:24px;font-weight:700;color:var(--text);">${fmtM(totalBarras)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">al ${adopcionPct}% de adopción</div>
+      </div>
+      <div style="background:var(--green-light);border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;font-weight:700;color:#1B4D32;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Objetivo +${metaPct}%</div>
+        <div style="font-size:24px;font-weight:700;color:#1B4D32;">${fmtM(objetivo)}</div>
+        <div style="font-size:11px;color:var(--green);margin-top:3px;">meta de crecimiento</div>
+      </div>
+      <div style="background:var(--danger-bg);border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;font-weight:700;color:var(--danger-text);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Brecha a cubrir</div>
+        <div style="font-size:24px;font-weight:700;color:var(--danger-text);">${fmtM(brecha)}</div>
+        <div style="font-size:11px;color:var(--danger-text);margin-top:3px;">${metaPct}% sobre la base actual</div>
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">Sugerencias para cubrir la brecha y capturar <span style="color:var(--red);">${fmtM(brecha)}</span> más:</div>
+    ${top5.map((p,i)=>{
+      const realTotal=p.valTotal||p.impacto;
+      const cubre2=Math.round(realTotal/brecha*100);
+      const semTag = p.semanas&&p.semanas.length ? ` · sem ${p.semanas.join(', ')}` : '';
+      const semsTexto = p.semanas&&p.semanas.length
+        ? (p.semanas.length===1
+            ? `la semana ${p.semanas[0]}`
+            : `las semanas ${[...p.semanas].slice(0,-1).join(', ')} y ${p.semanas[p.semanas.length-1]}`)
+        : '';
+      const desc = p.tipo==='prod' && semsTexto
+        ? `Activar medicación de <strong>${p.label}</strong> en ${semsTexto}.`
+        : '';
+      const detalle = p.tipo==='lote'
+        ? `${fmtM(p.impacto)} · cubre el ${cubre2}% de la brecha`
+        : `${fmtM(p.impactoXLote)}/lote × ${nLotes} lote${nLotes!==1?'s':''} = ${fmtM(realTotal)} · cubre el ${cubre2}% de la brecha`;
+      return `
+      <div class="brecha-palanca" style="border-left-color:var(--red);">
+        <div style="font-size:16px;font-weight:700;color:var(--text-muted);width:22px;">${i+1}</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;">${p.label}<span style="font-weight:400;color:var(--text-muted);">${semTag}</span></div>
+          ${desc?`<div style="font-size:12px;color:var(--text);margin:3px 0 2px;">${desc}</div>`:''}
+          <div style="font-size:12px;color:var(--text-muted);">${detalle}</div>
+        </div>
+      </div>`;
+    }).join('')}
+    <div style="font-size:11px;color:var(--text-muted);margin-top:10px;">* Sobre potencial teórico al ${adopcionPct}% de adopción.</div>
+    <div class="section-nav"><button class="section-nav-btn" onclick="showTab('datos')" style="gap:6px;">← Volver a datos</button></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// VALIDACIÓN
+// ══════════════════════════════════════════════════════════════════════════════
+function setFieldValidity(id, valid){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.toggle('invalid', !valid);
+}
+
+function validar(){
+  const animales = +document.getElementById('animales').value;
+  const dias     = +document.getElementById('dias').value;
+  const lotes    = +document.getElementById('lotes').value;
+  const semIni   = +document.getElementById('sem-ini').value;
+  const semFin   = +document.getElementById('sem-fin').value;
+
+  const msgs = [];
+
+  setFieldValidity('animales', animales > 0);
+  if(!(animales > 0)) msgs.push('⚠ Animales por lote debe ser mayor a 0.');
+
+  setFieldValidity('dias', dias >= 1 && dias <= 7);
+  if(!(dias >= 1 && dias <= 7)) msgs.push('⚠ Días de tratamiento debe estar entre 1 y 7.');
+
+  setFieldValidity('lotes', lotes >= 1);
+  if(!(lotes >= 1)) msgs.push('⚠ Lotes activos debe ser al menos 1.');
+
+  const semsOk = semFin > semIni;
+  setFieldValidity('sem-ini', semsOk);
+  setFieldValidity('sem-fin', semsOk);
+  if(!semsOk) msgs.push('⚠ La semana de fin debe ser mayor a la de inicio.');
+
+  const sinP = prods.filter(p => p.activas.size > 0 && (!p.dosis || !p.precio));
+  if(sinP.length) msgs.push(`⚠ Verifica dosis y precio: ${sinP.map(p=>p.nombre).join(', ')}`);
+
+  const b = document.getElementById('validation-banner');
+  b.innerHTML = msgs.join('<br>');
+  b.style.display = msgs.length ? 'block' : 'none';
+
+  // Disable export when no meaningful data
+  const hasData = _totGlobal > 0;
+  document.querySelectorAll('[onclick="exportarPDF()"]').forEach(btn=>{
+    btn.disabled = !hasData;
+    btn.style.opacity = hasData ? '1' : '0.45';
+    btn.title = hasData ? 'Exportar como PDF' : 'Configura el programa para exportar';
+  });
+  return msgs.length === 0;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ORQUESTADOR
+// ══════════════════════════════════════════════════════════════════════════════
+function renderAll(){
+  validar();
+  const semInfo=calcInteracciones();
+  renderTabla(semInfo);
+  renderChart();
+}
+function calc(){renderAll();saveState();}
+function toggleCheck(pi,sem,checked){
+  if(checked) prods[pi].activas.add(sem); else prods[pi].activas.delete(sem);
+  renderAll();
+  saveState();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CRUD
+// ══════════════════════════════════════════════════════════════════════════════
+function addProd(){
+  prods.push({nombre:'Nuevo producto',dosis:10,conc:20,precio:80000,tipo:'mg_kg',clase:'',activas:new Set()});
+  renderProds();
+}
+function delProd(i){prods.splice(i,1);renderProds();}
+function addPremix(){premixMols.push({nombre:'Nueva molécula',clase:'',activas:new Set()});renderPremix();renderAll();}
+function delPremix(i){premixMols.splice(i,1);renderPremix();renderAll();}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// REINICIAR (completo)
+// ══════════════════════════════════════════════════════════════════════════════
+function reiniciar(){
+  if(!confirm('¿Reiniciar? Se perderán todos los datos actuales.')) return;
+  try{localStorage.removeItem(LS_KEY);}catch(e){}
+
+  // ── Campos de cliente ──
+  const setVal = (id,v) => { const el=document.getElementById(id); if(el) el.value=v; };
+  setVal('cliente-nombre','');
+  setVal('cliente-granja','');
+  setVal('cliente-fecha','');
+
+  // ── Perfil productivo (blank) ──
+  setVal('animales','');
+  setVal('dias','');
+  setVal('lotes','');
+  setVal('etapa','ceba');
+  setVal('sem-ini','');
+  setVal('sem-fin','');
+  setVal('fecha-inicio','');
+  setVal('desplazamiento','');
+
+  // ── Dosificador (blank) ──
+  setVal('dos-inv','');
+  setVal('dos-mant','');
+  setVal('dos-tasa','');
+  setVal('dos-anos','');
+  setVal('dos-fac',0);
+  const dispEl=document.getElementById('dos-fac-display');
+  if(dispEl) dispEl.textContent='—';
+
+  // ── Global state ──
+  _totGlobal=0; _nLotes=1; _totProd=[]; _dosImpactoPct=0;
+  setAdopcion(60);
+
+  // ── Productos ──
+  // Blank prods (no active weeks, no price — user fills fresh)
+  prods = DEFAULT_PRODS().map(p=>({...p, activas:new Set()}));
+  premixMols = DEFAULT_PREMIX().map(p=>({...p, activas:new Set()}));
+  lotesOcultos=new Set();
+
+  // ── Limpiar DOM explícitamente antes de re-renderizar ──
+  const clearEl = id => { const el=document.getElementById(id); if(el) el.innerHTML=''; };
+  clearEl('prod-grid');
+  clearEl('premix-grid');
+  clearEl('thead');
+  clearEl('tbody');
+  clearEl('tfoot');
+  clearEl('pareto-wrap');
+  clearEl('brecha-panel');
+  clearEl('resumen-caso');
+
+  // ── Re-render todo ──
+  actualizarSemanas();
+  renderProds();
+  renderPremix();
+  calc();
+  calcDos();
+  actualizarBadgeCliente();
+  showTab('datos');
+  showToast('✓ Simulador reiniciado');
+}
+
+function buildPDFHtml(){
+  const animales    = +document.getElementById('animales').value||1000;
+  const dias        = +document.getElementById('dias').value||7;
+  const nLotes      = +document.getElementById('lotes').value||1;
+  const semIni      = document.getElementById('sem-ini').value||11;
+  const semFin      = document.getElementById('sem-fin').value||24;
+  const etapaKey    = document.getElementById('etapa').value||'ceba';
+  const etapaLabel  = {ceba:'Ceba',precebo:'Precebo',gestacion:'Gestación'}[etapaKey];
+  const fecha       = new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'});
+  const clienteNom  = (document.getElementById('cliente-nombre')||{}).value||'';
+  const clienteGranja=(document.getElementById('cliente-granja')||{}).value||'';
+  const clienteFechaRaw=(document.getElementById('cliente-fecha')||{}).value||'';
+  const clienteFecha = clienteFechaRaw
+    ? new Date(clienteFechaRaw+'T00:00:00').toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'})
+    : fecha;
+  const rTotal    = document.getElementById('r-total').textContent;
+  const rTodos    = document.getElementById('r-todos').textContent;
+  const rAdoptado = document.getElementById('r-adoptado').textContent;
+  const resumenTxt= (document.getElementById('resumen-caso')||{}).textContent||'';
+  const getOH     = id=>{ const el=document.getElementById(id); return el?el.outerHTML:''; };
+  // Only include rows with active medication (remove class="inactive" rows)
+  const tbodyEl = document.getElementById('tbody');
+  let tbodyHtml = '';
+  if(tbodyEl){
+    const clone = tbodyEl.cloneNode(true);
+    clone.querySelectorAll('tr.inactive').forEach(r=>r.remove());
+    tbodyHtml = clone.outerHTML;
+  }
+  const tableHtml = getOH('thead')+tbodyHtml+getOH('tfoot');
+  let chartImg='';
+  try{ const cv=document.getElementById('chart'); if(cv) chartImg=cv.toDataURL('image/png'); }catch(e){}
+
+  // Pareto from globals
+  const paretoData=(_totProd&&_totProd.length?_totProd:[]).map((v,i)=>({
+    nombre:prods[i]?prods[i].nombre:'', val:v*_nLotes*adopcionPct/100
+  })).filter(d=>d.val>0).sort((a,b)=>b.val-a.val);
+  const pMax=paretoData[0]?.val||1;
+  const pTot=paretoData.reduce((s,d)=>s+d.val,0);
+
+  // Brecha
+  renderBrecha(_totGlobal*_nLotes*adopcionPct/100);
+  const brechaHtml=(document.getElementById('brecha-panel')||{}).innerHTML||'';
+
+  const mll=v=>v>=1e6?'$\u00a0'+(v/1e6).toFixed(1)+'M':'$\u00a0'+Math.round(v).toLocaleString('es-CO');
+
+  const html=`<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<link rel="icon" type="image/png" href="https://alura-reports-binz.vercel.app/logo%20alura.png">
+<title>Potencial Comercial Solubles · Alura</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--red:#7C2D2D;--green:#2A6B45;--border:#DDD6D1;--bg:#FAF7F6;--text:#1C1410;--muted:#6B5F58;}
+@page{size:A4 portrait;margin:0;}
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;}
+@media print{html{zoom:1.15;}body{padding:1.2cm 1.5cm;}}
+body{font-family:'Inter',system-ui,sans-serif;font-size:9.5pt;color:var(--text);background:white;width:210mm;}
+input,button,select,canvas{display:none!important;}
+
+/* ── HEADER ── */
+.hdr{background:var(--red);color:white;padding:22px 28px;display:flex;justify-content:space-between;align-items:flex-start;}
+.hdr-eyebrow{font-size:7pt;font-weight:600;letter-spacing:.12em;text-transform:uppercase;opacity:.6;margin-bottom:5px;}
+.hdr-title{font-size:18pt;font-weight:700;line-height:1.15;margin-bottom:14px;}
+.hdr-subtitle{font-size:10pt;font-weight:400;opacity:.75;}
+.hdr-meta{display:grid;grid-template-columns:repeat(5,auto);gap:8px 24px;}
+.m dt{font-size:6.5pt;font-weight:600;text-transform:uppercase;letter-spacing:.08em;opacity:.55;margin-bottom:1px;}
+.m dd{font-size:9pt;font-weight:600;}
+.hdr-kpi{text-align:right;flex-shrink:0;margin-left:28px;}
+.hdr-kpi-lbl{font-size:7pt;font-weight:600;text-transform:uppercase;letter-spacing:.1em;opacity:.55;margin-bottom:4px;}
+.hdr-kpi-val{font-size:22pt;font-weight:700;line-height:1;letter-spacing:-.02em;}
+.hdr-kpi-sub{font-size:7.5pt;opacity:.6;margin-top:3px;}
+
+/* ── BODY ── */
+.body{padding:18px 28px;}
+
+/* ── SECTION ── */
+.sec{margin-bottom:14px;}
+.sec-h{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.sec-h::before{content:'';width:3px;height:15px;background:var(--red);border-radius:2px;flex-shrink:0;}
+.sec-t{font-size:9.5pt;font-weight:700;}
+
+/* ── TABLE ── */
+table{width:100%;border-collapse:collapse;font-size:7.5pt;}
+thead th{font-size:6.5pt;font-weight:600;color:var(--muted);text-align:right;padding:4px 4px;background:var(--bg);border-bottom:2px solid var(--border);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+thead th:first-child,thead th:nth-child(2){text-align:center;}
+tbody tr:nth-child(even){background:var(--bg);}
+tbody td{padding:3.5px 4px;border-bottom:1px solid #EDEBE9;text-align:right;vertical-align:middle;}
+tbody td:first-child{text-align:center;color:var(--muted);font-weight:600;}
+tbody td:nth-child(2){text-align:center;}
+tbody td.ck{text-align:center;}
+.ck-wrap{justify-content:center;}.ck-val{font-size:7pt;color:#2A6B45;font-weight:600;}
+tbody td.amt{font-weight:700;color:var(--red);}
+tbody tr.inactive{opacity:.2;}
+tfoot td{padding:5px 4px;font-weight:700;font-size:8.5pt;border-top:2px solid var(--text);background:var(--bg);text-align:right;}
+tfoot td.grand{color:var(--red);font-size:9.5pt;}
+tfoot td:first-child{text-align:left;}
+.pill{display:inline-block;font-size:6pt;padding:1px 4px;border-radius:4px;}.pill-p{background:#FFF3E0;color:#7A4F00;}
+
+/* ── KPI ── */
+.kpi-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.kpi{border:1px solid var(--border);border-radius:8px;padding:9px 12px;}
+.kpi.accent{background:#FEF4F4;border-color:var(--red);}
+.kpi-lbl{font-size:6.5pt;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px;}
+.kpi-val{font-size:16pt;font-weight:700;color:var(--red);letter-spacing:-.02em;line-height:1.1;}
+.kpi-sub{font-size:7pt;color:var(--muted);margin-top:1px;}
+
+/* ── RESUMEN ── */
+.resumen{border-left:3px solid var(--red);background:var(--bg);padding:8px 12px;border-radius:0 7px 7px 0;font-size:8.5pt;line-height:1.6;margin-bottom:12px;}
+
+/* ── TWO COL ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;}
+
+/* ── PARETO ── */
+.pr{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.pr-n{font-size:8pt;font-weight:600;width:100px;flex-shrink:0;text-align:right;}
+.pr-t{flex:1;background:#EDE8E5;border-radius:2px;height:15px;overflow:hidden;}
+.pr-f{height:100%;background:var(--red);border-radius:2px;}
+.pr-p{font-size:7pt;color:var(--muted);width:24px;text-align:right;flex-shrink:0;}
+.pr-v{font-size:8pt;font-weight:700;color:var(--red);width:48px;flex-shrink:0;text-align:right;}
+
+/* ── BRECHA ── */
+.brecha-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.brecha-palanca{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;padding:7px 10px;background:var(--bg);border-radius:5px;border-left:3px solid var(--red);}
+
+/* ── CTC ── */
+.ctc{background:#FFF8E1;border-left:4px solid #D97706;border-radius:0 7px 7px 0;padding:8px 12px;font-size:8pt;color:#7A4F00;display:flex;gap:7px;margin-top:14px;}
+
+/* ── FOOTER ── */
+.foot{margin-top:14px;padding-top:7px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:7pt;color:var(--muted);}
+</style></head>
+<body>
+
+<!-- ══════ HEADER ══════════════════════════════════════════════════════════ -->
+<div class="hdr">
+  <div style="flex:1;">
+    <div class="hdr-eyebrow">Alura · Science for Life · Calculadora de Potencial Solubles</div>
+    <div class="hdr-title">${clienteNom||'Potencial Comercial'}<br>
+      <span class="hdr-subtitle">${clienteGranja||etapaLabel}</span>
+    </div>
+    <div class="hdr-meta">
+      <dl class="m"><dt>Productor</dt><dd>${clienteNom||'—'}</dd></dl>
+      <dl class="m"><dt>Granja</dt><dd>${clienteGranja||'—'}</dd></dl>
+      <dl class="m"><dt>Etapa</dt><dd>${etapaLabel}</dd></dl>
+      <dl class="m"><dt>Animales / lote</dt><dd>${animales.toLocaleString('es-CO')}</dd></dl>
+      <dl class="m"><dt>Lotes activos</dt><dd>${nLotes}</dd></dl>
+      <dl class="m"><dt>Semanas ciclo</dt><dd>${semIni} – ${semFin}</dd></dl>
+      <dl class="m"><dt>Días tto / sem</dt><dd>${dias}</dd></dl>
+      ${clienteFechaRaw?`<dl class="m"><dt>Fecha</dt><dd>${clienteFecha}</dd></dl>`:''}
+    </div>
+  </div>
+  <div class="hdr-kpi">
+    <div class="hdr-kpi-lbl">Potencial con adopción</div>
+    <div class="hdr-kpi-val">${rAdoptado}</div>
+    <div class="hdr-kpi-sub">al ${adopcionPct}% de adopción</div>
+  </div>
+</div>
+
+<!-- ══════ BODY ══════════════════════════════════════════════════════════ -->
+<div class="body">
+
+  <!-- Cronograma -->
+  <div class="sec">
+    <div class="sec-h"><span class="sec-t">Cronograma de medicación</span></div>
+    <table>${tableHtml}</table>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-lbl">Potencial teórico por lote</div>
+      <div class="kpi-val">${rTotal}</div>
+      <div class="kpi-sub">100% adopción · ciclo completo</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Potencial teórico total</div>
+      <div class="kpi-val">${rTodos}</div>
+      <div class="kpi-sub">${nLotes} lote${nLotes!==1?'s':''} activos</div>
+    </div>
+    <div class="kpi accent">
+      <div class="kpi-lbl">Potencial con adopción</div>
+      <div class="kpi-val">${rAdoptado}</div>
+      <div class="kpi-sub">al ${adopcionPct}%</div>
+    </div>
+  </div>
+
+  <!-- Resumen -->
+  <div class="resumen">${resumenTxt||'Configura el programa para ver el resumen de potencial.'}</div>
+
+  <!-- Pareto + Chart -->
+  <div class="two-col">
+    <div>
+      <div class="sec-h"><span class="sec-t">Distribución del potencial por producto</span></div>
+      ${paretoData.map(d=>{
+        const w=Math.round(d.val/pMax*100);
+        const pct=Math.round(d.val/pTot*100);
+        return `<div class="pr">
+          <div class="pr-n">${d.nombre}</div>
+          <div class="pr-t"><div class="pr-f" style="width:${w}%"></div></div>
+          <div class="pr-p">${pct}%</div>
+          <div class="pr-v">${mll(d.val)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div>
+      <div class="sec-h"><span class="sec-t">Distribución potencial por mes</span></div>
+      ${(()=>{
+        const ld=_chartLoteData;
+        if(!ld||!ld.series||!ld.series.length) return '<p style="font-size:8pt;color:var(--muted);">Configure la fecha de entrada del primer lote.</p>';
+        const actSeries=ld.series.filter(s=>!s.hidden);
+        const actMonths=ld.labels.map((label,i)=>({label,idx:i,
+          vals:actSeries.map(s=>s.data[i]||0),
+          total:actSeries.reduce((sum,s)=>sum+(s.data[i]||0),0)
+        })).filter(m=>m.total>0);
+        if(!actMonths.length) return '<p style="font-size:8pt;color:var(--muted);">Sin datos de distribución mensual.</p>';
+        const maxT=Math.max(...actMonths.map(m=>m.total));
+        const W=300,H=110,pb=22,pt=8,pl=28,pr=4;
+        const cH=H-pb-pt;
+        const bSpacing=(W-pl-pr)/actMonths.length;
+        const bW=Math.min(18,bSpacing-3);
+        const gridLines=[0.25,0.5,0.75,1].map(p=>{
+          const y=pt+cH*(1-p);
+          return `<line x1="${pl}" y1="${y}" x2="${W-pr}" y2="${y}" stroke="#DDD6D1" stroke-width="0.5"/>
+                  <text x="${pl-2}" y="${y+3}" text-anchor="end" font-size="6" fill="#8A7F78">$${(maxT*p).toFixed(1)}M</text>`;
+        }).join('');
+        const bars=actMonths.map((m,mi)=>{
+          const xC=pl+mi*bSpacing+bSpacing/2;
+          let stackY=pt+cH;
+          const segs=actSeries.map((s,si)=>{
+            const v=m.vals[si];
+            if(!v) return '';
+            const bH=(v/maxT)*cH;
+            stackY-=bH;
+            return `<rect x="${xC-bW/2}" y="${stackY}" width="${bW}" height="${bH}" fill="${s.color}" rx="1.5"/>`;
+          }).join('');
+          return segs+`<text x="${xC}" y="${H-pb+10}" text-anchor="middle" font-size="6.5" fill="#6B5F58">${m.label}</text>`;
+        }).join('');
+        const legend=actSeries.map(s=>`<span style="display:inline-flex;align-items:center;gap:3px;font-size:7pt;margin-right:8px;"><span style="width:8px;height:8px;background:${s.color};border-radius:2px;display:inline-block;"></span>${s.label}</span>`).join('');
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;">${gridLines}${bars}</svg><div style="margin-top:4px;">${legend}</div>`;
+      })()}
+    </div>
+  </div>
+
+  <!-- Panel de crecimiento -->
+  ${brechaHtml?`
+  <div class="sec">
+    <div class="sec-h"><span class="sec-t">Panel de crecimiento — palancas accionables</span></div>
+    <div style="font-size:7.5pt;">${brechaHtml}</div>
+  </div>`:''}
+
+  <!-- CTC -->
+  <div class="ctc">
+    <span style="font-size:13pt;line-height:1;flex-shrink:0;">⚠</span>
+    <span><strong>Análisis teórico — requiere validación del CTC.</strong> El programa de medicación debe ser revisado y aprobado por el CTC antes de ser presentado al cliente.</span>
+  </div>
+
+  <div class="foot">
+    <span>Solubles Alura · Iluma Alliance · Uso interno y confidencial Alura · V1</span>
+    <span>${fecha}</span>
+  </div>
+
+</div>
+</body></html>`;
+  return html;
+}
+
+
+function exportarPDF(){
+  const html = buildPDFHtml();
+  const win=window.open('','_blank','width=980,height=820');
+  if(!win){alert('Permite ventanas emergentes para exportar el PDF.');return;}
+  win.document.write(html);
+  win.document.close();
+  win.onload=()=>{ setTimeout(()=>win.print(),600); };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// VALOR TAB — RENTABILIDAD PROPUESTA DE VALOR
+// ══════════════════════════════════════════════════════════════════════════════
+function showVtab(id){
+  document.querySelectorAll('.vtab-btn').forEach(b=>b.classList.toggle('active',b.dataset.vtab===id));
+  document.querySelectorAll('.vtab-pane').forEach(p=>p.classList.toggle('active',p.id==='vtab-'+id));
+}
+
+const _intlCOP = new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0});
+function fmtCOP(v){
+  if(v==null||isNaN(v)) return '—';
+  return _intlCOP.format(Math.round(v));
+}
+
+function calcDos(){
+  const inv    = +document.getElementById('dos-inv').value    || 0;
+  const mant   = +document.getElementById('dos-mant').value   || 0;
+  const tasa   = +document.getElementById('dos-tasa').value   || 0;
+  const anos   = +document.getElementById('dos-anos').value   || 1;
+  const facAct = +document.getElementById('dos-fac').value    || 0;
+  // Clear "from simulator" label if user typed manually
+  const dispEl = document.getElementById('dos-fac-display');
+  if(dispEl && !dispEl.textContent.includes('simulador')) dispEl.textContent='';
+
+  // Costos del dosificador
+  const deprecM = inv / (Math.max(1,anos) * 12);
+  const deprecA = deprecM * 12;
+  const capM    = inv * (tasa / 100) / 12;
+  const capA    = capM * 12;
+  const mantA   = mant * 12;
+  const costoM  = deprecM + capM + mant;
+  const costoA  = costoM * 12;
+
+  // Impacto: % de la facturación que consume el dosificador
+  const pctConsumo = facAct > 0 ? (costoM / facAct * 100) : 0;
+  _dosImpactoPct = pctConsumo;
+  const metaEl = document.getElementById('meta-crec');
+  if(metaEl && pctConsumo > 0) metaEl.value = pctConsumo.toFixed(1);
+
+  // ── Desglose de costos ──
+  document.getElementById('dos-desglose').innerHTML = `
+    <table class="dos-table">
+      <thead><tr><td></td><td class="col-h">Mensual</td><td class="col-h">Anual</td></tr></thead>
+      <tbody>
+        <tr>
+          <td class="col-lbl" style="padding-left:22px;">Depreciación (${anos} año${anos!==1?'s':''})</td>
+          <td class="col-v">${fmtCOP(deprecM)}</td><td class="col-v">${fmtCOP(deprecA)}</td>
+        </tr>
+        <tr>
+          <td class="col-lbl" style="padding-left:22px;">Costo de capital (${tasa}% a. sobre inversión inicial)</td>
+          <td class="col-v">${fmtCOP(capM)}</td><td class="col-v">${fmtCOP(capA)}</td>
+        </tr>
+        <tr>
+          <td class="col-lbl" style="padding-left:22px;">Mantenimiento</td>
+          <td class="col-v">${fmtCOP(mant)}</td><td class="col-v">${fmtCOP(mantA)}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td class="col-lbl" style="padding-left:22px;font-weight:700;">Costo total del dosificador</td>
+          <td class="col-v">${fmtCOP(costoM)}</td><td class="col-v">${fmtCOP(costoA)}</td>
+        </tr>
+      </tfoot>
+    </table>`;
+
+  // ── Impacto ──
+  document.getElementById('dos-impacto').innerHTML = `
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:6px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+        <div style="padding:16px 22px;border-right:1px solid var(--border);">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:5px;">Costo del dosificador</div>
+          <div style="font-size:22px;font-weight:700;color:var(--red);">${fmtCOP(costoM)}/mes</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Anual: ${fmtCOP(costoA)}</div>
+        </div>
+        <div style="padding:16px 22px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:5px;">Impacto sobre la facturación</div>
+          <div style="font-size:22px;font-weight:700;color:var(--red);">−${facAct>0?pctConsumo.toFixed(1):'—'} pp</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${facAct>0?fmtCOP(costoM)+' sobre '+fmtCOP(facAct)+'/mes':'Trae la facturación del simulador'}</div>
+        </div>
+      </div>
+      ${facAct>0?`
+      <div style="padding:14px 22px;border-top:1px solid var(--border);background:var(--gray-bg);font-size:13px;color:var(--text);line-height:1.7;">
+        Implementar el dosificador cuesta <strong style="color:var(--red);">${fmtCOP(costoM)}/mes</strong>,
+        lo que consume <strong>${pctConsumo.toFixed(1)} puntos</strong> sobre la facturación proyectada de
+        <strong>${fmtCOP(facAct)}/mes</strong>.
+      </div>`:''}
+    </div>`;
+
+  // ── Recuperación ─────────────────────────────────────────────────────────────
+  const recEl = document.getElementById('dos-recovery');
+  if(!facAct){ recEl.innerHTML=''; return; }
+
+  recEl.innerHTML = `
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:6px;">
+      <div style="padding:16px 22px;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+        <span style="font-size:13px;color:var(--text);line-height:1.6;">
+          Para recuperar esos <strong>${pctConsumo.toFixed(1)} puntos</strong>, la facturación debe crecer.
+        </span>
+        <button onclick="showTab('brecha')" style="background:var(--red);color:white;border:none;border-radius:7px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-main);white-space:nowrap;flex-shrink:0;">
+          → Panel de crecimiento
+        </button>
+      </div>
+    </div>`;
+}
+
+function usarPotencialDos(silent){
+  const adoptado = _totGlobal * _nLotes * adopcionPct / 100;
+  if(!adoptado){
+    if(!silent) alert('Primero configura el programa en la pestaña DATOS y activa productos en la tabla.');
+    document.getElementById('dos-fac').value = 0;
+    document.getElementById('dos-fac-display').textContent = '—';
+    calcDos();
+    return;
+  }
+  const semIni = +document.getElementById('sem-ini').value || 11;
+  const semFin = +document.getElementById('sem-fin').value || 24;
+  const semanas = Math.max(1, semFin - semIni + 1);
+  const meses = semanas / SEMANAS_POR_MES;
+  const val = Math.round(adoptado / meses);
+  document.getElementById('dos-fac').value = val;
+  document.getElementById('dos-fac-display').textContent = 'Traído del simulador (' + adopcionPct + '% adopción)';
+  calcDos();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CLIPBOARD
+// ══════════════════════════════════════════════════════════════════════════════
+function copyVal(el){
+  const text = el.textContent.trim();
+  navigator.clipboard.writeText(text)
+    .then(()=>showToast('📋 Copiado: '+text))
+    .catch(()=>showToast('No se pudo copiar'));
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DEBOUNCE
+// ══════════════════════════════════════════════════════════════════════════════
+const SEMANAS_POR_MES = 4.33; // constante nombrada, no magic number
+let _debounceTimer;
+function calcD(){
+  clearTimeout(_debounceTimer);
+  _debounceTimer = setTimeout(calc, 260);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════════════════════
+function showToast(msg, duration=2800){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), duration);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AUTO-SAVE / AUTO-LOAD (localStorage)
+// ══════════════════════════════════════════════════════════════════════════════
+const LS_KEY = 'solusim_v1';
+
+function saveState(){
+  try {
+    const state = {
+      clienteNombre: (document.getElementById('cliente-nombre')||{}).value||'',
+      clienteGranja: (document.getElementById('cliente-granja')||{}).value||'',
+      clienteFecha:  (document.getElementById('cliente-fecha')||{}).value||'',
+      animales: document.getElementById('animales').value,
+      dias:     document.getElementById('dias').value,
+      lotes:    document.getElementById('lotes').value,
+      etapa:    document.getElementById('etapa').value,
+      semIni:   document.getElementById('sem-ini').value,
+      semFin:   document.getElementById('sem-fin').value,
+      fechaInicio: document.getElementById('fecha-inicio').value,
+      desplaz:  document.getElementById('desplazamiento').value,
+      adopcion: adopcionPct,
+      prods: prods.map(p=>({
+        nombre:p.nombre, dosis:p.dosis, conc:p.conc,
+        precio:p.precio, tipo:p.tipo, clase:p.clase,
+        activas:[...p.activas]
+      })),
+      premix: premixMols.map(p=>({
+        nombre:p.nombre, clase:p.clase, activas:[...p.activas]
+      }))
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  } catch(e){ /* storage unavailable */ }
+}
+
+function loadState(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    const s = JSON.parse(raw);
+    const set = (id,v) => { const el=document.getElementById(id); if(el&&v!=null) el.value=v; };
+    if(s.clienteNombre) set('cliente-nombre', s.clienteNombre);
+    if(s.clienteGranja) set('cliente-granja', s.clienteGranja);
+    if(s.clienteFecha)  set('cliente-fecha',  s.clienteFecha);
+    set('animales', s.animales);
+    set('dias',     s.dias);
+    set('lotes',    s.lotes);
+    set('etapa',    s.etapa);
+    set('sem-ini',  s.semIni);
+    set('sem-fin',  s.semFin);
+    set('fecha-inicio', s.fechaInicio);
+    set('desplazamiento', s.desplaz);
+    if(s.adopcion) adopcionPct = s.adopcion;
+    setTimeout(actualizarBadgeCliente, 50); // update badge after DOM settles
+    // Restore products (match by position if same count, otherwise skip)
+    if(Array.isArray(s.prods) && s.prods.length === prods.length){
+      s.prods.forEach((sp,i)=>{
+        prods[i].dosis   = sp.dosis;
+        prods[i].conc    = sp.conc;
+        prods[i].precio  = sp.precio;
+        prods[i].activas = new Set(sp.activas);
+      });
+    }
+    if(Array.isArray(s.premix) && s.premix.length === premixMols.length){
+      s.premix.forEach((sp,i)=>{
+        premixMols[i].activas = new Set(sp.activas);
+      });
+    }
+    return true;
+  } catch(e){ return false; }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════════════════
+const restored = loadState();
+if(!restored){
+  document.getElementById('fecha-inicio').value=new Date().toISOString().split('T')[0];
+}
+actualizarSemanas();
+renderProds();
+renderPremix();
+calc();
+calcDos();
+usarPotencialDos(true);
+if(restored) setTimeout(()=>showToast('✓ Datos de tu última sesión restaurados'),600);
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+const AUTH_EXPIRY = new Date('2026-07-01'); // expira el 30 de junio de 2026
+
+function checkPwd(){
+  if(new Date() >= AUTH_EXPIRY){
+    const errEl = document.getElementById('pwd-error');
+    errEl.textContent = 'Esta contraseña ha caducado el 30 de junio. Contacta al equipo solubles Alura para obtener acceso.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const val = document.getElementById('pwd-input').value;
+  if(val === 'Alura2026'){
+    document.getElementById('landing').style.display='none';
+    sessionStorage.setItem('sim-auth','1');
+  } else {
+    document.getElementById('pwd-error').textContent = 'Contraseña incorrecta. Intenta de nuevo.';
+    document.getElementById('pwd-error').style.display='block';
+    document.getElementById('pwd-input').value='';
+    document.getElementById('pwd-input').focus();
+  }
+}
+if(sessionStorage.getItem('sim-auth')==='1' && new Date() < AUTH_EXPIRY){
+  document.getElementById('landing').style.display='none';
+}
+</script>
+</body>
+</html>
